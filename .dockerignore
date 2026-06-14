@@ -14,5 +14,3 @@ public/build
 public/hot
 npm-debug.log
 yarn-error.log
-Dockerfile
-docker-compose*.yml

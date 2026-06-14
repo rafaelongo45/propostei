@@ -1,28 +1,4 @@
-FROM composer:2 AS composer
-
-WORKDIR /app
-
-COPY composer.json composer.lock ./
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --no-progress \
-    --prefer-dist \
-    --no-scripts \
-    --optimize-autoloader
-
-FROM node:24-alpine AS assets
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci
-
-COPY . .
-COPY --from=composer /app/vendor ./vendor
-RUN npm run build
-
-FROM php:8.4-fpm-bookworm
+FROM php:8.4-apache-bookworm
 
 WORKDIR /var/www/html
 
@@ -48,18 +24,34 @@ RUN apt-get update \
         pcntl \
         pdo_pgsql \
         zip \
+    && a2enmod rewrite \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --from=composer /app/vendor ./vendor
-COPY . .
-COPY --from=assets /app/public/build ./public/build
-COPY docker/php/entrypoint.sh /usr/local/bin/propostei-entrypoint
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=node:24 /usr/local/bin/node /usr/local/bin/node
+COPY --from=node:24 /usr/local/lib/node_modules /usr/local/lib/node_modules
 
-RUN chmod +x /usr/local/bin/propostei-entrypoint \
-    && cp -R public public-dist \
+RUN ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+    && ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+
+COPY . .
+
+RUN composer install \
+        --no-dev \
+        --no-interaction \
+        --no-progress \
+        --prefer-dist \
+        --optimize-autoloader \
+    && npm ci \
+    && npm run build \
+    && rm -rf node_modules \
     && chown -R www-data:www-data storage bootstrap/cache \
     && php artisan package:discover --ansi
 
-ENTRYPOINT ["propostei-entrypoint"]
-CMD ["php-fpm"]
+COPY docker/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+EXPOSE 10000
+
+CMD ["/usr/local/bin/start.sh"]

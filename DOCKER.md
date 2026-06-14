@@ -1,6 +1,6 @@
 # Docker
 
-Este setup sobe a aplicação com PHP-FPM, Nginx e PostgreSQL.
+Este setup sobe a aplicação com Apache + PHP em um container, PostgreSQL em outro e um worker opcional para filas.
 
 ## Uso local
 
@@ -30,13 +30,14 @@ DB_PASSWORD=propostei
 docker compose up -d --build
 ```
 
-4. Gere a chave da aplicação e rode as migrations:
+4. Gere a chave, se ainda não existir, e rode seeders se desejar:
 
 ```bash
 docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate --seed
-docker compose exec app php artisan storage:link
+docker compose exec app php artisan db:seed
 ```
+
+As migrations rodam automaticamente no start do container via `docker/start.sh`.
 
 5. Para desenvolvimento com Vite dentro do Docker, suba também o serviço `node`:
 
@@ -50,40 +51,35 @@ docker compose --profile dev up -d node
 http://localhost:8081
 ```
 
-## Uso em servidor
+## Render
 
-No servidor, configure o `.env` com `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` apontando para o domínio real e senhas fortes para PostgreSQL.
+O `Dockerfile` usa Apache e respeita a variável `PORT` fornecida pelo Render, com fallback `10000`.
 
-Depois rode:
-
-```bash
-docker compose up -d --build
-docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate --force
-```
-
-Se quiser que migrations rodem automaticamente ao subir o container, defina:
-
-```env
-RUN_MIGRATIONS=true
-```
-
-Para atualizar uma nova versão:
+No start do container, `docker/start.sh` executa:
 
 ```bash
-docker compose up -d --build
-docker compose exec app php artisan migrate --force
+php artisan migrate --force
+php artisan storage:link || true
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+O container inicia com:
+
+```bash
+apache2-foreground
 ```
 
 ## Observações
 
-- O build do frontend roda dentro da imagem Docker e é publicado no volume `public` para o Nginx.
+- O build do frontend roda dentro da imagem Docker.
 - O serviço `worker` processa a fila database e executa o envio de e-mails em background.
 - O serviço `node` é opcional e serve para desenvolvimento com Vite em `http://localhost:5173`.
 - O banco principal é `propostei` e o banco de testes `propostei_test` é criado na primeira inicialização do volume PostgreSQL.
 - A extensão PHP `gd` está instalada na imagem, então PDFs com imagem também funcionam no container.
 - As extensões essenciais para Laravel e PostgreSQL, como `mbstring`, `pdo_pgsql` e `intl`, já estão incluídas na imagem.
-- Os volumes `postgres`, `public`, `storage` e `cache` persistem dados entre recriações dos containers.
+- Os volumes `postgres`, `storage` e `cache` persistem dados entre recriações dos containers.
 
 ## Admin
 

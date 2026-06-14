@@ -41,8 +41,7 @@ docker compose up -d --build
 
 ```bash
 docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate --seed
-docker compose exec app php artisan storage:link
+docker compose exec app php artisan db:seed
 ```
 
 5. Acesse:
@@ -130,9 +129,69 @@ php artisan test
 Com Docker:
 
 ```bash
-docker compose exec app php artisan migrate:fresh --seed
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan db:seed
 docker compose exec app php artisan route:list
 docker compose exec app php artisan storage:link
 ```
 
 O PostgreSQL cria o banco principal `propostei` e, na primeira inicialização do volume, também cria `propostei_test`.
+
+## Deploy no Render
+
+O `Dockerfile` de produção usa Apache + PHP no mesmo container. O Apache aponta para `/var/www/html/public`, respeita a variável `PORT` do Render e usa `10000` como fallback.
+
+No start do container, o script [docker/start.sh](docker/start.sh) executa:
+
+```bash
+php artisan migrate --force
+php artisan storage:link || true
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+Não use `migrate:fresh` em produção.
+
+Variáveis esperadas no Render:
+
+```env
+APP_NAME=propostei
+APP_ENV=production
+APP_KEY=base64:...
+APP_DEBUG=false
+APP_URL=https://seu-app.onrender.com
+
+APP_LOCALE=pt_BR
+APP_FALLBACK_LOCALE=pt_BR
+APP_FAKER_LOCALE=pt_BR
+
+LOG_CHANNEL=stderr
+LOG_LEVEL=debug
+
+DB_CONNECTION=pgsql
+DB_HOST=host-do-postgres-render
+DB_PORT=5432
+DB_DATABASE=propostei
+DB_USERNAME=propostei
+DB_PASSWORD=senha
+
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+
+MAIL_MAILER=log
+```
+
+Para testar a imagem localmente:
+
+```bash
+docker build -t propostei-render .
+docker run --rm -p 10000:10000 --env-file .env -e PORT=10000 propostei-render
+```
+
+A aplicação deve responder em:
+
+```text
+http://localhost:10000
+```
