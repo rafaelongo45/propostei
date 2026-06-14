@@ -1,4 +1,5 @@
 <script setup>
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -45,7 +46,9 @@ const updatePassword = () => {
             </p>
         </header>
 
-        <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
+        <form novalidate @submit.prevent="updatePassword" class="mt-6 space-y-6">
+            <FormErrorSummary :errors="form.errors" />
+
             <div>
                 <InputLabel for="current_password" value="Senha atual" />
 

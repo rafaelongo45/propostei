@@ -9,6 +9,15 @@ use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'name' => $this->cleanText($this->input('name')),
+            'email' => $this->cleanEmail($this->input('email')),
+            'company_name' => $this->cleanText($this->input('company_name')),
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -30,5 +39,23 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
         ];
+    }
+
+    private function cleanEmail(mixed $value): ?string
+    {
+        $value = $this->cleanText($value);
+
+        return $value === null ? null : mb_strtolower($value);
+    }
+
+    private function cleanText(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 }

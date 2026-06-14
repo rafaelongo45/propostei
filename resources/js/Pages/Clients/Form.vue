@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -33,7 +34,20 @@ const maskPhone = (event) => {
         .replace(/(\d{5})(\d)/, '$1-$2');
 };
 
+const cleanOptional = (value) => value?.trim() || '';
+const cleanEmail = (value) => cleanOptional(value).toLowerCase();
+
+const normalizeForm = () => {
+    form.name = cleanOptional(form.name);
+    form.email = cleanEmail(form.email);
+    form.phone = cleanOptional(form.phone);
+    form.company = cleanOptional(form.company);
+    form.notes = cleanOptional(form.notes);
+};
+
 const submit = () => {
+    normalizeForm();
+
     if (isEditing) {
         form.put(route('clients.update', props.client.id));
         return;
@@ -60,7 +74,9 @@ const submit = () => {
 
         <div class="py-8">
             <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-                <form class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm" @submit.prevent="submit">
+                <form class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm" novalidate @submit.prevent="submit">
+                    <FormErrorSummary class="mb-5" :errors="form.errors" />
+
                     <div class="grid gap-5 sm:grid-cols-2">
                         <div class="sm:col-span-2">
                             <InputLabel for="name" value="Nome" />
@@ -73,6 +89,7 @@ const submit = () => {
                                 maxlength="255"
                                 minlength="2"
                                 autocomplete="name"
+                                @blur="form.name = cleanOptional(form.name)"
                             />
                             <InputError class="mt-2" :message="form.errors.name" />
                         </div>
@@ -86,6 +103,7 @@ const submit = () => {
                                 maxlength="255"
                                 autocomplete="email"
                                 inputmode="email"
+                                @blur="form.email = cleanEmail(form.email)"
                             />
                             <InputError class="mt-2" :message="form.errors.email" />
                         </div>
@@ -102,12 +120,13 @@ const submit = () => {
                                 pattern="^\(\d{2}\)\s\d{4,5}-\d{4}$"
                                 title="Informe um telefone no formato (11) 99999-9999"
                                 @input="maskPhone"
+                                @blur="form.phone = cleanOptional(form.phone)"
                             />
                             <InputError class="mt-2" :message="form.errors.phone" />
                         </div>
                         <div class="sm:col-span-2">
                             <InputLabel for="company" value="Empresa" />
-                            <TextInput id="company" v-model="form.company" class="mt-1 block w-full" maxlength="255" autocomplete="organization" />
+                            <TextInput id="company" v-model="form.company" class="mt-1 block w-full" maxlength="255" autocomplete="organization" @blur="form.company = cleanOptional(form.company)" />
                             <InputError class="mt-2" :message="form.errors.company" />
                         </div>
                         <div class="sm:col-span-2">
@@ -118,6 +137,7 @@ const submit = () => {
                                 rows="4"
                                 maxlength="2000"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                @blur="form.notes = cleanOptional(form.notes)"
                             />
                             <InputError class="mt-2" :message="form.errors.notes" />
                         </div>

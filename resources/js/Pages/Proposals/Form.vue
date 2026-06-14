@@ -1,5 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import TextInput from '@/Components/TextInput.vue';
@@ -124,7 +125,32 @@ const maskDate = (event) => {
         .replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
 };
 
+const cleanOptional = (value) => String(value ?? '').trim();
+const cleanDecimal = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return value;
+    }
+
+    return String(value).trim().replace(',', '.');
+};
+
+const normalizeForm = () => {
+    form.title = cleanOptional(form.title);
+    form.introduction = cleanOptional(form.introduction);
+    form.valid_until = cleanOptional(form.valid_until);
+    form.delivery_estimate = cleanOptional(form.delivery_estimate);
+    form.internal_notes = cleanOptional(form.internal_notes);
+    form.manual_discount = cleanDecimal(form.manual_discount) || 0;
+    form.items = form.items.map((item) => ({
+        ...item,
+        description: cleanOptional(item.description),
+        quantity: cleanDecimal(item.quantity),
+        unit_price: cleanDecimal(item.unit_price),
+    }));
+};
+
 const submit = () => {
+    normalizeForm();
     form.clearErrors('valid_until');
 
     if (form.valid_until && isPastBrazilDate(form.valid_until)) {
@@ -163,7 +189,9 @@ const submit = () => {
 
         <div class="py-8">
             <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-                <form class="space-y-6" @submit.prevent="submit">
+                <form class="space-y-6" novalidate @submit.prevent="submit">
+                    <FormErrorSummary :errors="form.errors" />
+
                     <section class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                         <div class="grid gap-5 sm:grid-cols-2">
                             <div>
@@ -196,7 +224,7 @@ const submit = () => {
                             </div>
                             <div class="sm:col-span-2">
                                 <InputLabel for="title" value="Título" />
-                                <TextInput id="title" v-model="form.title" class="mt-1 block w-full" required minlength="3" maxlength="255" />
+                                <TextInput id="title" v-model="form.title" class="mt-1 block w-full" required minlength="3" maxlength="255" @blur="form.title = cleanOptional(form.title)" />
                                 <InputError class="mt-2" :message="form.errors.title" />
                             </div>
                             <div class="sm:col-span-2">
@@ -207,6 +235,7 @@ const submit = () => {
                                     rows="4"
                                     maxlength="4000"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    @blur="form.introduction = cleanOptional(form.introduction)"
                                 />
                                 <InputError class="mt-2" :message="form.errors.introduction" />
                             </div>
@@ -223,12 +252,13 @@ const submit = () => {
                                     pattern="^(0[1-9]|[12][0-9]|3[01])/(0[1-9]|1[0-2])/\d{4}$"
                                     :title="`Informe uma data no formato dd/mm/aaaa, igual ou posterior a ${todayBrazil}`"
                                     @input="maskDate"
+                                    @blur="form.valid_until = cleanOptional(form.valid_until)"
                                 />
                                 <InputError class="mt-2" :message="form.errors.valid_until" />
                             </div>
                             <div>
                                 <InputLabel for="delivery_estimate" value="Prazo estimado de entrega" />
-                                <TextInput id="delivery_estimate" v-model="form.delivery_estimate" class="mt-1 block w-full" maxlength="255" placeholder="Ex.: 15 dias úteis" />
+                                <TextInput id="delivery_estimate" v-model="form.delivery_estimate" class="mt-1 block w-full" maxlength="255" placeholder="Ex.: 15 dias úteis" @blur="form.delivery_estimate = cleanOptional(form.delivery_estimate)" />
                                 <InputError class="mt-2" :message="form.errors.delivery_estimate" />
                             </div>
                             <div class="sm:col-span-2">
@@ -239,6 +269,7 @@ const submit = () => {
                                     rows="3"
                                     maxlength="4000"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                    @blur="form.internal_notes = cleanOptional(form.internal_notes)"
                                 />
                                 <InputError class="mt-2" :message="form.errors.internal_notes" />
                             </div>
@@ -265,17 +296,17 @@ const submit = () => {
                             >
                                 <div class="sm:col-span-6">
                                     <InputLabel :for="`item-description-${index}`" value="Descrição" />
-                                    <TextInput :id="`item-description-${index}`" v-model="item.description" class="mt-1 block w-full" required minlength="2" maxlength="255" />
+                                    <TextInput :id="`item-description-${index}`" v-model="item.description" class="mt-1 block w-full" required minlength="2" maxlength="255" @blur="item.description = cleanOptional(item.description)" />
                                     <InputError class="mt-2" :message="form.errors[`items.${index}.description`]" />
                                 </div>
                                 <div class="sm:col-span-2">
                                     <InputLabel :for="`item-quantity-${index}`" value="Qtd." />
-                                    <TextInput :id="`item-quantity-${index}`" v-model="item.quantity" type="number" min="0.01" max="999999.99" step="0.01" inputmode="decimal" class="mt-1 block w-full" required />
+                                    <TextInput :id="`item-quantity-${index}`" v-model="item.quantity" type="number" min="0.01" max="999999.99" step="0.01" inputmode="decimal" class="mt-1 block w-full" required @blur="item.quantity = cleanDecimal(item.quantity)" />
                                     <InputError class="mt-2" :message="form.errors[`items.${index}.quantity`]" />
                                 </div>
                                 <div class="sm:col-span-2">
                                     <InputLabel :for="`item-price-${index}`" value="Valor unitário" />
-                                    <TextInput :id="`item-price-${index}`" v-model="item.unit_price" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" class="mt-1 block w-full" required />
+                                    <TextInput :id="`item-price-${index}`" v-model="item.unit_price" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" class="mt-1 block w-full" required @blur="item.unit_price = cleanDecimal(item.unit_price)" />
                                     <InputError class="mt-2" :message="form.errors[`items.${index}.unit_price`]" />
                                 </div>
                                 <div class="sm:col-span-2">
@@ -312,7 +343,7 @@ const submit = () => {
                         <div class="grid gap-5 sm:grid-cols-2">
                             <div>
                                 <InputLabel for="manual_discount" value="Desconto manual opcional" />
-                                <TextInput id="manual_discount" v-model="form.manual_discount" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" class="mt-1 block w-full" />
+                                <TextInput id="manual_discount" v-model="form.manual_discount" type="number" min="0" max="9999999999.99" step="0.01" inputmode="decimal" class="mt-1 block w-full" @blur="form.manual_discount = cleanDecimal(form.manual_discount) || 0" />
                                 <InputError class="mt-2" :message="form.errors.manual_discount" />
                             </div>
                             <div class="rounded-md bg-gray-50 p-4">

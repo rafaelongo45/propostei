@@ -127,6 +127,14 @@ class ClientController extends Controller
 
     private function validatedData(Request $request): array
     {
+        $request->merge([
+            'name' => $this->cleanText($request->input('name')),
+            'email' => $this->cleanEmail($request->input('email')),
+            'phone' => $this->cleanText($request->input('phone')),
+            'company' => $this->cleanText($request->input('company')),
+            'notes' => $this->cleanText($request->input('notes')),
+        ]);
+
         return $request->validate([
             'name' => ['required', 'string', 'min:2', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
@@ -134,6 +142,24 @@ class ClientController extends Controller
             'company' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
+    }
+
+    private function cleanEmail(mixed $value): ?string
+    {
+        $value = $this->cleanText($value);
+
+        return $value === null ? null : mb_strtolower($value);
+    }
+
+    private function cleanText(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 
     private function authorizeClient(Client $client): void

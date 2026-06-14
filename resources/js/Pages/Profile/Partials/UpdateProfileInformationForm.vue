@@ -1,4 +1,5 @@
 <script setup>
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -25,7 +26,14 @@ const form = useForm({
     remove_company_logo: false,
 });
 
+const cleanOptional = (value) => value?.trim() || '';
+const cleanEmail = (value) => cleanOptional(value).toLowerCase();
+
 const submit = () => {
+    form.name = cleanOptional(form.name);
+    form.email = cleanEmail(form.email);
+    form.company_name = cleanOptional(form.company_name);
+
     form.post(route('profile.update'), {
         forceFormData: true,
         preserveScroll: true,
@@ -49,7 +57,9 @@ const submit = () => {
             </p>
         </header>
 
-        <form @submit.prevent="submit" class="mt-6 space-y-6">
+        <form novalidate @submit.prevent="submit" class="mt-6 space-y-6">
+            <FormErrorSummary :errors="form.errors" />
+
             <div>
                 <InputLabel for="name" value="Nome" />
 
@@ -63,6 +73,7 @@ const submit = () => {
                     maxlength="255"
                     autofocus
                     autocomplete="name"
+                    @blur="form.name = cleanOptional(form.name)"
                 />
 
                 <InputError class="mt-2" :message="form.errors.name" />
@@ -80,6 +91,7 @@ const submit = () => {
                     maxlength="255"
                     autocomplete="username"
                     inputmode="email"
+                    @blur="form.email = cleanEmail(form.email)"
                 />
 
                 <InputError class="mt-2" :message="form.errors.email" />
@@ -96,6 +108,7 @@ const submit = () => {
                     maxlength="255"
                     autocomplete="organization"
                     placeholder="Ex.: Longo Studio"
+                    @blur="form.company_name = cleanOptional(form.company_name)"
                 />
 
                 <InputError class="mt-2" :message="form.errors.company_name" />

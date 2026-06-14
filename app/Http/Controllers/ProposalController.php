@@ -212,6 +212,8 @@ class ProposalController extends Controller
 
     private function validatedData(Request $request): array
     {
+        $request->merge($this->normalizedProposalInput($request));
+
         $data = $request->validate([
             'client_id' => [
                 'required',
@@ -233,6 +235,56 @@ class ProposalController extends Controller
         $data['manual_discount'] ??= 0;
 
         return $data;
+    }
+
+    private function normalizedProposalInput(Request $request): array
+    {
+        return [
+            'title' => $this->cleanText($request->input('title')),
+            'introduction' => $this->cleanText($request->input('introduction')),
+            'valid_until' => $this->cleanText($request->input('valid_until')),
+            'delivery_estimate' => $this->cleanText($request->input('delivery_estimate')),
+            'internal_notes' => $this->cleanText($request->input('internal_notes')),
+            'manual_discount' => $this->cleanDecimal($request->input('manual_discount')),
+            'items' => collect($request->input('items', []))
+                ->map(function (mixed $item) {
+                    if (! is_array($item)) {
+                        return $item;
+                    }
+
+                    return [
+                        ...$item,
+                        'description' => $this->cleanText($item['description'] ?? null),
+                        'quantity' => $this->cleanDecimal($item['quantity'] ?? null),
+                        'unit_price' => $this->cleanDecimal($item['unit_price'] ?? null),
+                    ];
+                })
+                ->all(),
+        ];
+    }
+
+    private function cleanDecimal(mixed $value): mixed
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_string($value)) {
+            return str_replace(',', '.', trim($value));
+        }
+
+        return $value;
+    }
+
+    private function cleanText(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 
     private function syncItems(Proposal $proposal, array $items): void

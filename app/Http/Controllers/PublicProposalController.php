@@ -67,6 +67,12 @@ class PublicProposalController extends Controller
 
     public function accept(Request $request, string $token): RedirectResponse
     {
+        $request->merge([
+            'accepted_by_name' => $this->cleanText($request->input('accepted_by_name')),
+            'accepted_by_email' => $this->cleanEmail($request->input('accepted_by_email')),
+            'acceptance_notes' => $this->cleanText($request->input('acceptance_notes')),
+        ]);
+
         $data = $request->validate([
             'accepted_by_name' => ['required', 'string', 'min:2', 'max:255'],
             'accepted_by_email' => ['nullable', 'email', 'max:255'],
@@ -98,6 +104,12 @@ class PublicProposalController extends Controller
 
     public function reject(Request $request, string $token): RedirectResponse
     {
+        $request->merge([
+            'rejected_by_name' => $this->cleanText($request->input('rejected_by_name')),
+            'rejected_by_email' => $this->cleanEmail($request->input('rejected_by_email')),
+            'rejection_reason' => $this->cleanText($request->input('rejection_reason')),
+        ]);
+
         $data = $request->validate([
             'rejected_by_name' => ['required', 'string', 'min:2', 'max:255'],
             'rejected_by_email' => ['nullable', 'email', 'max:255'],
@@ -125,5 +137,23 @@ class PublicProposalController extends Controller
         }
 
         return back()->with('success', 'Proposta recusada com sucesso.');
+    }
+
+    private function cleanEmail(mixed $value): ?string
+    {
+        $value = $this->cleanText($value);
+
+        return $value === null ? null : mb_strtolower($value);
+    }
+
+    private function cleanText(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 }

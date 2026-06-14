@@ -31,16 +31,21 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $request->merge([
+            'name' => $this->cleanText($request->input('name')),
+            'email' => $this->cleanEmail($request->input('email')),
+        ]);
+
+        $data = $request->validate([
             'name' => 'required|string|min:2|max:255',
             'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
         ]);
 
         event(new Registered($user));
@@ -48,5 +53,23 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
         return redirect(route('dashboard', absolute: false));
+    }
+
+    private function cleanEmail(mixed $value): ?string
+    {
+        $value = $this->cleanText($value);
+
+        return $value === null ? null : mb_strtolower($value);
+    }
+
+    private function cleanText(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 }

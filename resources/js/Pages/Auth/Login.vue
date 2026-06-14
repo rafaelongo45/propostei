@@ -1,6 +1,7 @@
 <script setup>
 import Checkbox from '@/Components/Checkbox.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
@@ -22,7 +23,11 @@ const form = useForm({
     remember: false,
 });
 
+const cleanEmail = (value) => value?.trim().toLowerCase() || '';
+
 const submit = () => {
+    form.email = cleanEmail(form.email);
+
     form.post(route('login'), {
         onFinish: () => form.reset('password'),
     });
@@ -37,7 +42,9 @@ const submit = () => {
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit">
+        <form novalidate @submit.prevent="submit">
+            <FormErrorSummary class="mb-4" :errors="form.errors" />
+
             <div>
                 <InputLabel for="email" value="E-mail" />
 
@@ -51,6 +58,7 @@ const submit = () => {
                     autofocus
                     autocomplete="username"
                     inputmode="email"
+                    @blur="form.email = cleanEmail(form.email)"
                 />
 
                 <InputError class="mt-2" :message="form.errors.email" />

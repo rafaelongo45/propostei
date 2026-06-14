@@ -1,5 +1,6 @@
 <script setup>
 import DangerButton from '@/Components/DangerButton.vue';
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import Modal from '@/Components/Modal.vue';
@@ -67,6 +68,8 @@ const closeModal = () => {
                     para possível recuperação administrativa. Informe sua senha
                     para confirmar.
                 </p>
+
+                <FormErrorSummary class="mt-4" :errors="form.errors" />
 
                 <div class="mt-6">
                     <InputLabel

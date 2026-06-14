@@ -1,4 +1,5 @@
 <script setup>
+import FormErrorSummary from '@/Components/FormErrorSummary.vue';
 import { Head, useForm, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -40,7 +41,14 @@ const formatDate = (value) => {
     return day && month && year ? `${day}/${month}/${year}` : value;
 };
 
+const cleanOptional = (value) => value?.trim() || '';
+const cleanEmail = (value) => cleanOptional(value).toLowerCase();
+
 const acceptProposal = () => {
+    form.accepted_by_name = cleanOptional(form.accepted_by_name);
+    form.accepted_by_email = cleanEmail(form.accepted_by_email);
+    form.acceptance_notes = cleanOptional(form.acceptance_notes);
+
     if (!window.confirm('Confirmar aceite desta proposta?')) {
         return;
     }
@@ -51,6 +59,10 @@ const acceptProposal = () => {
 };
 
 const rejectProposal = () => {
+    rejectForm.rejected_by_name = cleanOptional(rejectForm.rejected_by_name);
+    rejectForm.rejected_by_email = cleanEmail(rejectForm.rejected_by_email);
+    rejectForm.rejection_reason = cleanOptional(rejectForm.rejection_reason);
+
     if (!window.confirm('Confirmar recusa desta proposta?')) {
         return;
     }
@@ -163,8 +175,11 @@ const rejectProposal = () => {
                         <div class="grid items-start gap-5 lg:grid-cols-2">
                             <form
                                 class="flex h-full flex-col rounded-lg border border-emerald-200 bg-white p-5 shadow-sm"
+                                novalidate
                                 @submit.prevent="acceptProposal"
                             >
+                                <FormErrorSummary class="mb-4" :errors="form.errors" />
+
                                 <div class="flex-1">
                                     <div class="min-h-24 rounded-md bg-emerald-50 px-4 py-3">
                                         <div class="text-base font-semibold text-emerald-900">Aceitar proposta</div>
@@ -185,6 +200,7 @@ const rejectProposal = () => {
                                                 maxlength="255"
                                                 autocomplete="name"
                                                 class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-emerald-600 focus:ring-emerald-600"
+                                                @blur="form.accepted_by_name = cleanOptional(form.accepted_by_name)"
                                             />
                                             <div v-if="form.errors.accepted_by_name" class="mt-2 text-sm text-red-600">
                                                 {{ form.errors.accepted_by_name }}
@@ -200,6 +216,7 @@ const rejectProposal = () => {
                                                 autocomplete="email"
                                                 inputmode="email"
                                                 class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-emerald-600 focus:ring-emerald-600"
+                                                @blur="form.accepted_by_email = cleanEmail(form.accepted_by_email)"
                                             />
                                             <div v-if="form.errors.accepted_by_email" class="mt-2 text-sm text-red-600">
                                                 {{ form.errors.accepted_by_email }}
@@ -216,6 +233,7 @@ const rejectProposal = () => {
                                             rows="4"
                                             class="mt-1 block w-full resize-y rounded-md border-gray-300 text-sm shadow-sm focus:border-emerald-600 focus:ring-emerald-600"
                                             placeholder="Opcional"
+                                            @blur="form.acceptance_notes = cleanOptional(form.acceptance_notes)"
                                         />
                                         <div v-if="form.errors.acceptance_notes" class="mt-2 text-sm text-red-600">
                                             {{ form.errors.acceptance_notes }}
@@ -234,8 +252,11 @@ const rejectProposal = () => {
 
                             <form
                                 class="flex h-full flex-col rounded-lg border border-rose-200 bg-white p-5 shadow-sm"
+                                novalidate
                                 @submit.prevent="rejectProposal"
                             >
+                                <FormErrorSummary class="mb-4" :errors="rejectForm.errors" />
+
                                 <div class="flex-1">
                                     <div class="min-h-24 rounded-md bg-rose-50 px-4 py-3">
                                         <div class="text-base font-semibold text-rose-900">Recusar proposta</div>
@@ -256,6 +277,7 @@ const rejectProposal = () => {
                                                 maxlength="255"
                                                 autocomplete="name"
                                                 class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-rose-600 focus:ring-rose-600"
+                                                @blur="rejectForm.rejected_by_name = cleanOptional(rejectForm.rejected_by_name)"
                                             />
                                             <div v-if="rejectForm.errors.rejected_by_name" class="mt-2 text-sm text-red-600">
                                                 {{ rejectForm.errors.rejected_by_name }}
@@ -271,6 +293,7 @@ const rejectProposal = () => {
                                                 autocomplete="email"
                                                 inputmode="email"
                                                 class="mt-1 block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-rose-600 focus:ring-rose-600"
+                                                @blur="rejectForm.rejected_by_email = cleanEmail(rejectForm.rejected_by_email)"
                                             />
                                             <div v-if="rejectForm.errors.rejected_by_email" class="mt-2 text-sm text-red-600">
                                                 {{ rejectForm.errors.rejected_by_email }}
@@ -288,6 +311,7 @@ const rejectProposal = () => {
                                             maxlength="4000"
                                             rows="4"
                                             class="mt-1 block w-full resize-y rounded-md border-gray-300 text-sm shadow-sm focus:border-rose-600 focus:ring-rose-600"
+                                            @blur="rejectForm.rejection_reason = cleanOptional(rejectForm.rejection_reason)"
                                         />
                                         <div v-if="rejectForm.errors.rejection_reason" class="mt-2 text-sm text-red-600">
                                             {{ rejectForm.errors.rejection_reason }}

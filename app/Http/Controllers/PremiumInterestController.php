@@ -12,6 +12,10 @@ class PremiumInterestController extends Controller
 {
     public function store(Request $request): RedirectResponse
     {
+        $request->merge([
+            'source' => $this->cleanSource($request->input('source')),
+        ]);
+
         $data = $request->validate([
             'source' => ['nullable', 'string', 'max:80'],
         ]);
@@ -48,5 +52,16 @@ class PremiumInterestController extends Controller
                     'created_at' => $interest->created_at?->format('d/m/Y H:i'),
                 ]),
         ]);
+    }
+
+    private function cleanSource(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = mb_strtolower(trim((string) $value));
+
+        return $value === '' ? null : $value;
     }
 }
