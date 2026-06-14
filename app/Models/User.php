@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo_path', 'plan', 'subscription_status', 'premium_ends_at'])]
+#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo_path', 'plan', 'subscription_status', 'premium_ends_at', 'is_admin'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -31,6 +31,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'premium_ends_at' => 'datetime',
+            'is_admin' => 'boolean',
         ];
     }
 
@@ -42,6 +43,11 @@ class User extends Authenticatable
     public function proposals(): HasMany
     {
         return $this->hasMany(Proposal::class);
+    }
+
+    public function premiumInterests(): HasMany
+    {
+        return $this->hasMany(PremiumInterest::class);
     }
 
     public function isPremium(): bool
@@ -58,7 +64,7 @@ class User extends Authenticatable
 
     public function proposalsLimit(): ?int
     {
-        return $this->isPremium() ? null : 3;
+        return $this->isPremium() ? null : 5;
     }
 
     public function activeProposalsCount(): int

@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps({
     proposals: Array,
@@ -9,6 +9,9 @@ defineProps({
 });
 
 const page = usePage();
+const interestForm = useForm({
+    source: 'proposals_index',
+});
 
 const statusLabels = {
     draft: 'Rascunho',
@@ -29,6 +32,12 @@ const formatMoney = (value) =>
         style: 'currency',
         currency: 'BRL',
     }).format(value || 0);
+
+const registerPremiumInterest = () => {
+    interestForm.post(route('premium-interest.store'), {
+        preserveScroll: true,
+    });
+};
 </script>
 
 <template>
@@ -85,15 +94,26 @@ const formatMoney = (value) =>
                                 Plano grátis: {{ planUsage.used }} de {{ planUsage.limit }} propostas usadas.
                             </p>
                             <p v-else class="mt-1 text-sm text-red-800">
-                                Você atingiu o limite do plano grátis. Assine o Premium por R$ 19,90/mês para criar propostas ilimitadas.
+                                Você atingiu o limite do plano grátis. Registre interesse no Premium por R$ 19,90/mês para criar propostas ilimitadas.
                             </p>
                         </div>
-                        <Link
-                            :href="route('plans.index')"
-                            class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                        >
-                            Ver planos
-                        </Link>
+                        <div class="grid gap-2 sm:flex">
+                            <button
+                                v-if="!planUsage.is_premium"
+                                type="button"
+                                class="inline-flex justify-center rounded-md bg-gray-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-gray-700 disabled:opacity-70"
+                                :disabled="interestForm.processing"
+                                @click="registerPremiumInterest"
+                            >
+                                {{ interestForm.processing ? 'Registrando...' : 'Quero ser Premium' }}
+                            </button>
+                            <Link
+                                :href="route('plans.index')"
+                                class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                            >
+                                Ver planos
+                            </Link>
+                        </div>
                     </div>
                 </section>
 

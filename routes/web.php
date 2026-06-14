@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\PlanController;
+use App\Http\Controllers\PremiumInterestController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\PublicProposalController;
@@ -26,6 +27,7 @@ Route::get('/plans', [PlanController::class, 'index'])->name('plans.index');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [ProposalController::class, 'index'])->name('dashboard');
+    Route::post('/premium-interest', [PremiumInterestController::class, 'store'])->name('premium-interest.store');
     Route::resource('clients', ClientController::class);
     Route::get('/proposals/{proposal}/pdf', [ProposalController::class, 'downloadPdf'])->name('proposals.pdf');
     Route::post('/proposals/{proposal}/send', [ProposalController::class, 'send'])->name('proposals.send');
@@ -35,6 +37,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/premium-interests', [PremiumInterestController::class, 'adminIndex'])->name('premium-interests.index');
 });
 
 require __DIR__.'/auth.php';

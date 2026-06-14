@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
                     'email_verified_at' => $request->user()->email_verified_at,
                     'company_name' => $request->user()->company_name,
                     'company_logo_url' => $request->user()->company_logo_url,
+                    'is_admin' => $request->user()->is_admin,
                 ] : null,
             ],
             'flash' => [

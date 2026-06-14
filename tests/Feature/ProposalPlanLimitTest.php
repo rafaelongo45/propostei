@@ -12,13 +12,13 @@ class ProposalPlanLimitTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_free_user_cannot_open_create_form_after_three_active_proposals(): void
+    public function test_free_user_cannot_open_create_form_after_five_active_proposals(): void
     {
         $user = User::factory()->create();
         $client = Client::factory()->for($user)->create();
 
         Proposal::factory()
-            ->count(3)
+            ->count(5)
             ->for($user)
             ->for($client)
             ->create();
@@ -30,13 +30,13 @@ class ProposalPlanLimitTest extends TestCase
             ->assertSessionHas('error');
     }
 
-    public function test_free_user_cannot_store_fourth_active_proposal(): void
+    public function test_free_user_cannot_store_sixth_active_proposal(): void
     {
         $user = User::factory()->create();
         $client = Client::factory()->for($user)->create();
 
         Proposal::factory()
-            ->count(3)
+            ->count(5)
             ->for($user)
             ->for($client)
             ->create();
@@ -47,10 +47,31 @@ class ProposalPlanLimitTest extends TestCase
             ->assertRedirect(route('plans.index'))
             ->assertSessionHas('error');
 
-        $this->assertSame(3, $user->proposals()->count());
+        $this->assertSame(5, $user->proposals()->count());
     }
 
-    public function test_premium_user_can_store_more_than_three_proposals(): void
+    public function test_soft_deleted_proposals_do_not_count_for_free_limit(): void
+    {
+        $user = User::factory()->create();
+        $client = Client::factory()->for($user)->create();
+
+        Proposal::factory()
+            ->count(5)
+            ->for($user)
+            ->for($client)
+            ->create();
+
+        $user->proposals()->first()->delete();
+
+        $this
+            ->actingAs($user)
+            ->post(route('proposals.store'), $this->proposalPayload($client->id))
+            ->assertRedirect();
+
+        $this->assertSame(5, $user->proposals()->count());
+    }
+
+    public function test_premium_user_can_store_more_than_five_proposals(): void
     {
         $user = User::factory()->create([
             'plan' => 'premium',
@@ -59,7 +80,7 @@ class ProposalPlanLimitTest extends TestCase
         $client = Client::factory()->for($user)->create();
 
         Proposal::factory()
-            ->count(3)
+            ->count(5)
             ->for($user)
             ->for($client)
             ->create();
@@ -69,7 +90,7 @@ class ProposalPlanLimitTest extends TestCase
             ->post(route('proposals.store'), $this->proposalPayload($client->id))
             ->assertRedirect();
 
-        $this->assertSame(4, $user->proposals()->count());
+        $this->assertSame(6, $user->proposals()->count());
     }
 
     private function proposalPayload(int $clientId): array

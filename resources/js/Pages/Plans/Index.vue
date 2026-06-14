@@ -1,14 +1,17 @@
 <script setup>
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps({
     planUsage: Object,
 });
 
 const page = usePage();
+const interestForm = useForm({
+    source: 'plans',
+});
 
 const freeBenefits = [
-    'Até 3 propostas',
+    'Até 5 propostas',
     'Clientes cadastrados',
     'Link público da proposta',
     'PDF',
@@ -21,6 +24,12 @@ const premiumBenefits = [
     'Recursos premium futuros',
     'Ideal para quem envia propostas com frequência',
 ];
+
+const registerPremiumInterest = () => {
+    interestForm.post(route('premium-interest.store'), {
+        preserveScroll: true,
+    });
+};
 </script>
 
 <template>
@@ -58,19 +67,26 @@ const premiumBenefits = [
 
         <main class="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
             <div
+                v-if="page.props.flash?.success"
+                class="mb-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+            >
+                {{ page.props.flash.success }}
+            </div>
+
+            <div
                 v-if="page.props.flash?.error"
                 class="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
             >
                 {{ page.props.flash.error }}
             </div>
 
-            <section class="max-w-3xl">
+            <section class="max-w-2xs">
                 <p class="text-sm font-semibold uppercase tracking-wide text-teal-700">Planos</p>
-                <h1 class="mt-3 text-4xl font-semibold text-slate-950 sm:text-5xl">
+                <h1 class="mt-3 text-4xl font-semibold text-slate-950 sm:text-4xl">
                     Comece grátis e evolua quando precisar de mais propostas.
                 </h1>
                 <p class="mt-5 text-lg leading-8 text-slate-600">
-                    Crie até 3 propostas profissionais sem pagar nada. Quando precisar de mais, o Premium por R$ 19,90/mês libera propostas ilimitadas.
+                    Crie até 5 propostas profissionais sem pagar nada. Quando precisar de mais, registre interesse no Premium por R$ 19,90/mês e tenha propostas ilimitadas.
                 </p>
             </section>
 
@@ -89,7 +105,7 @@ const premiumBenefits = [
                     Plano grátis: {{ planUsage.used }} de {{ planUsage.limit }} propostas usadas.
                 </p>
                 <p v-else class="mt-1 text-sm text-red-800">
-                    Você atingiu o limite do plano grátis. Assine o Premium por R$ 19,90/mês para criar propostas ilimitadas.
+                    Você atingiu o limite do plano grátis. Registre interesse no Premium por R$ 19,90/mês para criar propostas ilimitadas.
                 </p>
             </section>
 
@@ -109,7 +125,7 @@ const premiumBenefits = [
                     </div>
 
                     <p class="mt-6 rounded-md bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                        Comece criando até 3 propostas profissionais.
+                        Comece criando até 5 propostas profissionais.
                     </p>
 
                     <ul class="mt-6 space-y-3">
@@ -160,12 +176,29 @@ const premiumBenefits = [
                         </li>
                     </ul>
 
+                    <Link
+                        v-if="!page.props.auth.user"
+                        :href="route('register')"
+                        class="mt-8 inline-flex w-full justify-center rounded-md bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                    >
+                        Criar conta para demonstrar interesse
+                    </Link>
                     <button
+                        v-else-if="planUsage?.is_premium"
                         type="button"
                         disabled
                         class="mt-8 inline-flex w-full cursor-not-allowed justify-center rounded-md bg-white/70 px-4 py-3 text-sm font-semibold text-slate-700"
                     >
-                        Assinar em breve
+                        Premium ativo
+                    </button>
+                    <button
+                        v-else
+                        type="button"
+                        class="mt-8 inline-flex w-full justify-center rounded-md bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100 disabled:opacity-70"
+                        :disabled="interestForm.processing"
+                        @click="registerPremiumInterest"
+                    >
+                        {{ interestForm.processing ? 'Registrando interesse...' : 'Quero ser Premium' }}
                     </button>
                 </article>
             </section>

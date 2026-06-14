@@ -84,3 +84,16 @@ docker compose exec app php artisan migrate --force
 - A extensão PHP `gd` está instalada na imagem, então PDFs com imagem também funcionam no container.
 - As extensões essenciais para Laravel e PostgreSQL, como `mbstring`, `pdo_pgsql` e `intl`, já estão incluídas na imagem.
 - Os volumes `postgres`, `public`, `storage` e `cache` persistem dados entre recriações dos containers.
+
+## Admin
+
+Para liberar a área `/admin/premium-interests` para um usuário:
+
+```bash
+docker compose exec app php artisan tinker
+```
+
+```php
+$user = App\Models\User::where('email', 'seu@email.com')->first();
+$user->update(['is_admin' => true]);
+```

@@ -1,5 +1,5 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 defineProps({
     canLogin: Boolean,
@@ -32,8 +32,12 @@ const benefits = [
     'Histórico organizado para consultar propostas antigas quando precisar.',
 ];
 
+const interestForm = useForm({
+    source: 'landing',
+});
+
 const freePlanBenefits = [
-    'Até 3 propostas',
+    'Até 5 propostas',
     'Link público',
     'PDF',
     'Aceite e recusa',
@@ -45,6 +49,12 @@ const premiumPlanBenefits = [
     'Recursos premium futuros',
     'Ideal para freelancers e prestadores',
 ];
+
+const registerPremiumInterest = () => {
+    interestForm.post(route('premium-interest.store'), {
+        preserveScroll: true,
+    });
+};
 </script>
 
 <template>
@@ -89,6 +99,21 @@ const premiumPlanBenefits = [
         </header>
 
         <main>
+            <div class="mx-auto max-w-6xl px-4 pt-6 sm:px-6 lg:px-8">
+                <div
+                    v-if="$page.props.flash?.success"
+                    class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+                >
+                    {{ $page.props.flash.success }}
+                </div>
+                <div
+                    v-if="$page.props.flash?.error"
+                    class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+                >
+                    {{ $page.props.flash.error }}
+                </div>
+            </div>
+
             <section class="border-b border-slate-200 bg-white">
                 <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[1fr_360px] lg:px-8 lg:py-20">
                     <div class="max-w-3xl">
@@ -232,7 +257,7 @@ const premiumPlanBenefits = [
                         Comece grátis. Cresça quando fizer sentido.
                     </h2>
                     <p class="mt-4 text-base leading-7 text-slate-600">
-                        Comece grátis. Crie até 3 propostas profissionais sem pagar nada. Quando precisar de mais, assine o Premium por R$ 19,90/mês e tenha propostas ilimitadas.
+                        Comece grátis com até 5 propostas profissionais. Quando precisar de mais, registre interesse no Premium por R$ 19,90/mês e tenha propostas ilimitadas.
                     </p>
                 </div>
 
@@ -242,7 +267,7 @@ const premiumPlanBenefits = [
                             <div>
                                 <h3 class="text-xl font-semibold text-slate-950">Grátis</h3>
                                 <p class="mt-2 text-sm text-slate-600">
-                                    Comece criando até 3 propostas profissionais.
+                                    Comece criando até 5 propostas profissionais.
                                 </p>
                             </div>
                             <div class="text-right">
@@ -279,6 +304,23 @@ const premiumPlanBenefits = [
                                 <span>{{ benefit }}</span>
                             </li>
                         </ul>
+
+                        <Link
+                            v-if="!$page.props.auth.user"
+                            :href="route('register')"
+                            class="mt-8 inline-flex w-full justify-center rounded-md bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
+                        >
+                            Criar conta para demonstrar interesse
+                        </Link>
+                        <button
+                            v-else
+                            type="button"
+                            class="mt-8 inline-flex w-full justify-center rounded-md bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100 disabled:opacity-70"
+                            :disabled="interestForm.processing"
+                            @click="registerPremiumInterest"
+                        >
+                            {{ interestForm.processing ? 'Registrando interesse...' : 'Quero ser Premium' }}
+                        </button>
                     </article>
                 </div>
 

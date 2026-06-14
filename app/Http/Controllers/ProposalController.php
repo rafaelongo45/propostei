@@ -263,7 +263,7 @@ class ProposalController extends Controller
 
     private function freePlanLimitMessage(): string
     {
-        return 'Você atingiu o limite de 3 propostas do plano grátis. Assine o Premium por R$ 19,90/mês para criar propostas ilimitadas.';
+        return 'Você atingiu o limite de 5 propostas do plano grátis. Registre interesse no Premium por R$ 19,90/mês para criar propostas ilimitadas.';
     }
 
     private function proposalFormPayload(Proposal $proposal): array

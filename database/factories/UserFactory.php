@@ -32,6 +32,7 @@ class UserFactory extends Factory
             'plan' => 'free',
             'subscription_status' => null,
             'premium_ends_at' => null,
+            'is_admin' => false,
             'remember_token' => Str::random(10),
         ];
     }
