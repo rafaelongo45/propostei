@@ -27,6 +27,7 @@ class ProposalController extends Controller
 
         return Inertia::render('Proposals/Index', [
             'proposals' => $proposals,
+            'planUsage' => $request->user()->planUsage(),
             'stats' => [
                 'total' => $proposals->count(),
                 'accepted' => $proposals->where('status', 'accepted')->count(),
@@ -42,6 +43,10 @@ class ProposalController extends Controller
      */
     public function create(Request $request): Response|RedirectResponse
     {
+        if (! $request->user()->canCreateProposal()) {
+            return redirect()->route('plans.index')->with('error', $this->freePlanLimitMessage());
+        }
+
         $clients = $this->clientOptions($request);
 
         if ($clients->isEmpty()) {
@@ -60,6 +65,10 @@ class ProposalController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (! $request->user()->canCreateProposal()) {
+            return redirect()->route('plans.index')->with('error', $this->freePlanLimitMessage());
+        }
+
         $data = $this->validatedData($request);
 
         $proposal = DB::transaction(function () use ($request, $data): Proposal {
@@ -250,6 +259,11 @@ class ProposalController extends Controller
     private function authorizeProposal(Proposal $proposal): void
     {
         abort_unless($proposal->user_id === auth()->id(), 403);
+    }
+
+    private function freePlanLimitMessage(): string
+    {
+        return 'Você atingiu o limite de 3 propostas do plano grátis. Assine o Premium por R$ 19,90/mês para criar propostas ilimitadas.';
     }
 
     private function proposalFormPayload(Proposal $proposal): array

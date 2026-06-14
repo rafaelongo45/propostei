@@ -4,6 +4,7 @@ import { Head, Link, usePage } from '@inertiajs/vue3';
 
 defineProps({
     proposals: Array,
+    planUsage: Object,
     stats: Object,
 });
 
@@ -67,6 +68,34 @@ const formatMoney = (value) =>
                 >
                     {{ page.props.flash.error }}
                 </div>
+
+                <section
+                    class="mb-6 rounded-lg border p-5 shadow-sm"
+                    :class="planUsage.is_premium ? 'border-emerald-200 bg-emerald-50' : planUsage.can_create_proposal ? 'border-gray-200 bg-white' : 'border-red-200 bg-red-50'"
+                >
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <div class="text-sm font-semibold" :class="planUsage.is_premium ? 'text-emerald-900' : planUsage.can_create_proposal ? 'text-gray-900' : 'text-red-900'">
+                                Plano atual
+                            </div>
+                            <p v-if="planUsage.is_premium" class="mt-1 text-sm text-emerald-800">
+                                Plano Premium ativo: propostas ilimitadas.
+                            </p>
+                            <p v-else-if="planUsage.can_create_proposal" class="mt-1 text-sm text-gray-600">
+                                Plano grátis: {{ planUsage.used }} de {{ planUsage.limit }} propostas usadas.
+                            </p>
+                            <p v-else class="mt-1 text-sm text-red-800">
+                                Você atingiu o limite do plano grátis. Assine o Premium por R$ 19,90/mês para criar propostas ilimitadas.
+                            </p>
+                        </div>
+                        <Link
+                            :href="route('plans.index')"
+                            class="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                        >
+                            Ver planos
+                        </Link>
+                    </div>
+                </section>
 
                 <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">

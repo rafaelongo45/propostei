@@ -31,6 +31,20 @@ const benefits = [
     'Página pública com aceite simples e rastreável.',
     'Histórico organizado para consultar propostas antigas quando precisar.',
 ];
+
+const freePlanBenefits = [
+    'Até 3 propostas',
+    'Link público',
+    'PDF',
+    'Aceite e recusa',
+];
+
+const premiumPlanBenefits = [
+    'Propostas ilimitadas',
+    'Mais liberdade para uso comercial',
+    'Recursos premium futuros',
+    'Ideal para freelancers e prestadores',
+];
 </script>
 
 <template>
@@ -208,6 +222,73 @@ const benefits = [
                             <p class="text-sm leading-6 text-slate-700">{{ benefit }}</p>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <section class="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
+                <div class="max-w-3xl">
+                    <p class="text-sm font-semibold uppercase tracking-wide text-teal-700">Preços</p>
+                    <h2 class="mt-3 text-3xl font-semibold text-slate-950">
+                        Comece grátis. Cresça quando fizer sentido.
+                    </h2>
+                    <p class="mt-4 text-base leading-7 text-slate-600">
+                        Comece grátis. Crie até 3 propostas profissionais sem pagar nada. Quando precisar de mais, assine o Premium por R$ 19,90/mês e tenha propostas ilimitadas.
+                    </p>
+                </div>
+
+                <div class="mt-8 grid gap-6 lg:grid-cols-2">
+                    <article class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="text-xl font-semibold text-slate-950">Grátis</h3>
+                                <p class="mt-2 text-sm text-slate-600">
+                                    Comece criando até 3 propostas profissionais.
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-semibold text-slate-950">R$ 0</div>
+                                <div class="text-sm text-slate-500">para começar</div>
+                            </div>
+                        </div>
+
+                        <ul class="mt-6 space-y-3">
+                            <li v-for="benefit in freePlanBenefits" :key="benefit" class="flex gap-3 text-sm text-slate-700">
+                                <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800">✓</span>
+                                <span>{{ benefit }}</span>
+                            </li>
+                        </ul>
+                    </article>
+
+                    <article class="rounded-lg border border-teal-700 bg-slate-950 p-6 text-white shadow-sm">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <h3 class="text-xl font-semibold">Premium</h3>
+                                <p class="mt-2 text-sm text-slate-300">
+                                    Para quem envia propostas com frequência.
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-semibold">R$ 19,90</div>
+                                <div class="text-sm text-slate-300">/mês</div>
+                            </div>
+                        </div>
+
+                        <ul class="mt-6 space-y-3">
+                            <li v-for="benefit in premiumPlanBenefits" :key="benefit" class="flex gap-3 text-sm text-slate-200">
+                                <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-teal-400 text-xs font-bold text-slate-950">✓</span>
+                                <span>{{ benefit }}</span>
+                            </li>
+                        </ul>
+                    </article>
+                </div>
+
+                <div class="mt-6">
+                    <Link
+                        :href="route('plans.index')"
+                        class="inline-flex rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    >
+                        Ver planos
+                    </Link>
                 </div>
             </section>
 

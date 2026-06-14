@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\PlanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\PublicProposalController;
@@ -21,6 +22,7 @@ Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('publi
 Route::get('/p/{token}/pdf', [PublicProposalController::class, 'downloadPdf'])->name('public.proposals.pdf');
 Route::post('/p/{token}/accept', [PublicProposalController::class, 'accept'])->name('public.proposals.accept');
 Route::post('/p/{token}/reject', [PublicProposalController::class, 'reject'])->name('public.proposals.reject');
+Route::get('/plans', [PlanController::class, 'index'])->name('plans.index');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [ProposalController::class, 'index'])->name('dashboard');

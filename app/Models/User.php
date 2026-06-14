@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo_path'])]
+#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo_path', 'plan', 'subscription_status', 'premium_ends_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -30,6 +30,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'premium_ends_at' => 'datetime',
         ];
     }
 
@@ -41,6 +42,53 @@ class User extends Authenticatable
     public function proposals(): HasMany
     {
         return $this->hasMany(Proposal::class);
+    }
+
+    public function isPremium(): bool
+    {
+        return $this->plan === 'premium'
+            && $this->subscription_status === 'active'
+            && ($this->premium_ends_at === null || $this->premium_ends_at->isFuture());
+    }
+
+    public function isFree(): bool
+    {
+        return ! $this->isPremium();
+    }
+
+    public function proposalsLimit(): ?int
+    {
+        return $this->isPremium() ? null : 3;
+    }
+
+    public function activeProposalsCount(): int
+    {
+        return $this->proposals()->count();
+    }
+
+    public function canCreateProposal(): bool
+    {
+        $limit = $this->proposalsLimit();
+
+        return $limit === null || $this->activeProposalsCount() < $limit;
+    }
+
+    public function planUsage(): array
+    {
+        $used = $this->activeProposalsCount();
+        $limit = $this->proposalsLimit();
+
+        return [
+            'plan' => $this->isPremium() ? 'premium' : 'free',
+            'label' => $this->isPremium() ? 'Premium' : 'Grátis',
+            'subscription_status' => $this->subscription_status,
+            'used' => $used,
+            'limit' => $limit,
+            'remaining' => $limit === null ? null : max(0, $limit - $used),
+            'can_create_proposal' => $this->canCreateProposal(),
+            'is_premium' => $this->isPremium(),
+            'premium_price' => 'R$ 19,90/mês',
+        ];
     }
 
     protected function companyLogoUrl(): Attribute
