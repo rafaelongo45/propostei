@@ -5,6 +5,17 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <title inertia>{{ config('app.name', 'propostei') }}</title>
+
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18239798513"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'AW-18239798513');
+        </script>
+
         <link rel="icon" type="image/svg+xml" href="/propostei-favicon.svg">
         <link rel="apple-touch-icon" href="/propostei-logo.png">
 
