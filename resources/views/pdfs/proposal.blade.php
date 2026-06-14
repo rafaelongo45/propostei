@@ -250,6 +250,7 @@
         .client-info,
         .proposal-info,
         .summary,
+        .payment,
         .acceptance,
         .rejection {
             page-break-inside: avoid;
@@ -261,6 +262,7 @@
     $money = fn ($value) => 'R$ '.number_format((float) $value, 2, ',', '.');
     $date = fn ($value) => $value ? $value->format('d/m/Y') : 'Não informada';
     $creatorName = $proposal->user?->company_name ?: $proposal->user?->name ?: 'Prestador';
+    $payment = $proposal->user?->paymentDetails() ?: [];
 @endphp
 
 <div class="header">
@@ -368,6 +370,46 @@
         </div>
     </div>
 </div>
+
+@if ($payment)
+    <div class="section payment">
+        <div class="box">
+            <h2>Pagamento</h2>
+            <div class="info-list">
+                @if ($payment['recipient_name'] ?? null)
+                    <div class="info-row">
+                        <span class="info-label">Favorecido</span>
+                        <span class="info-value">{{ $payment['recipient_name'] }}</span>
+                    </div>
+                @endif
+
+                @if ($payment['pix_key'] ?? null)
+                    <div class="info-row">
+                        <span class="info-label">Chave Pix</span>
+                        <span class="info-value">{{ $payment['pix_key'] }}</span>
+                        @if ($payment['pix_key_type_label'] ?? null)
+                            <span class="muted">({{ $payment['pix_key_type_label'] }})</span>
+                        @endif
+                    </div>
+                @endif
+
+                @if ($payment['link'] ?? null)
+                    <div class="info-row">
+                        <span class="info-label">Link</span>
+                        <span>{{ $payment['link'] }}</span>
+                    </div>
+                @endif
+            </div>
+
+            @if ($payment['instructions'] ?? null)
+                <div style="margin-top: 10px;">
+                    <div class="label">Instruções de pagamento</div>
+                    <div class="note">{{ $payment['instructions'] }}</div>
+                </div>
+            @endif
+        </div>
+    </div>
+@endif
 
 @if ($proposal->status === 'accepted')
     <div class="section acceptance">

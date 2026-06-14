@@ -15,6 +15,11 @@ class ProfileUpdateRequest extends FormRequest
             'name' => $this->cleanText($this->input('name')),
             'email' => $this->cleanEmail($this->input('email')),
             'company_name' => $this->cleanText($this->input('company_name')),
+            'payment_pix_key' => $this->cleanText($this->input('payment_pix_key')),
+            'payment_pix_key_type' => $this->cleanKeyType($this->input('payment_pix_key_type')),
+            'payment_recipient_name' => $this->cleanText($this->input('payment_recipient_name')),
+            'payment_link' => $this->cleanText($this->input('payment_link')),
+            'payment_instructions' => $this->cleanText($this->input('payment_instructions')),
         ]);
     }
 
@@ -30,6 +35,11 @@ class ProfileUpdateRequest extends FormRequest
             'company_name' => ['nullable', 'string', 'max:255'],
             'company_logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'remove_company_logo' => ['nullable', 'boolean'],
+            'payment_pix_key' => ['nullable', 'string', 'max:255'],
+            'payment_pix_key_type' => ['nullable', 'string', Rule::in(array_keys(User::PIX_KEY_TYPES))],
+            'payment_recipient_name' => ['nullable', 'string', 'max:255'],
+            'payment_link' => ['nullable', 'url', 'max:2048'],
+            'payment_instructions' => ['nullable', 'string', 'max:2000'],
             'email' => [
                 'required',
                 'string',
@@ -57,5 +67,12 @@ class ProfileUpdateRequest extends FormRequest
         $value = trim((string) $value);
 
         return $value === '' ? null : $value;
+    }
+
+    private function cleanKeyType(mixed $value): ?string
+    {
+        $value = $this->cleanText($value);
+
+        return $value === null ? null : mb_strtolower($value);
     }
 }

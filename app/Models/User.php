@@ -13,12 +13,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo_path', 'plan', 'subscription_status', 'premium_ends_at', 'is_admin'])]
+#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo_path', 'payment_pix_key', 'payment_pix_key_type', 'payment_recipient_name', 'payment_link', 'payment_instructions', 'plan', 'subscription_status', 'premium_ends_at', 'is_admin'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
+
+    public const PIX_KEY_TYPES = [
+        'cpf' => 'CPF',
+        'cnpj' => 'CNPJ',
+        'email' => 'E-mail',
+        'phone' => 'Telefone',
+        'random' => 'Chave aleatória',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -94,6 +102,29 @@ class User extends Authenticatable
             'can_create_proposal' => $this->canCreateProposal(),
             'is_premium' => $this->isPremium(),
             'premium_price' => 'R$ 19,90/mês',
+        ];
+    }
+
+    public function paymentDetails(): array
+    {
+        if (
+            blank($this->payment_pix_key)
+            && blank($this->payment_recipient_name)
+            && blank($this->payment_link)
+            && blank($this->payment_instructions)
+        ) {
+            return [];
+        }
+
+        return [
+            'pix_key' => $this->payment_pix_key,
+            'pix_key_type' => $this->payment_pix_key_type,
+            'pix_key_type_label' => $this->payment_pix_key_type
+                ? self::PIX_KEY_TYPES[$this->payment_pix_key_type] ?? $this->payment_pix_key_type
+                : null,
+            'recipient_name' => $this->payment_recipient_name,
+            'link' => $this->payment_link,
+            'instructions' => $this->payment_instructions,
         ];
     }
 

@@ -160,6 +160,42 @@ const rejectProposal = () => {
                             </dl>
                         </div>
 
+                        <div v-if="proposal.payment" class="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+                            <div class="text-sm font-semibold text-emerald-900">Pagamento</div>
+                            <dl class="mt-3 space-y-3 text-sm">
+                                <div v-if="proposal.payment.recipient_name">
+                                    <dt class="text-emerald-700">Favorecido</dt>
+                                    <dd class="break-words font-medium text-emerald-950">
+                                        {{ proposal.payment.recipient_name }}
+                                    </dd>
+                                </div>
+                                <div v-if="proposal.payment.pix_key">
+                                    <dt class="text-emerald-700">
+                                        Chave Pix{{ proposal.payment.pix_key_type_label ? ` (${proposal.payment.pix_key_type_label})` : '' }}
+                                    </dt>
+                                    <dd class="break-words font-medium text-emerald-950">
+                                        {{ proposal.payment.pix_key }}
+                                    </dd>
+                                </div>
+                                <div v-if="proposal.payment.link">
+                                    <dt class="text-emerald-700">Link de pagamento</dt>
+                                    <dd>
+                                        <a
+                                            :href="proposal.payment.link"
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            class="break-words font-medium text-emerald-800 underline decoration-emerald-300 underline-offset-2 hover:text-emerald-950"
+                                        >
+                                            {{ proposal.payment.link }}
+                                        </a>
+                                    </dd>
+                                </div>
+                            </dl>
+                            <p v-if="proposal.payment.instructions" class="mt-4 whitespace-pre-line rounded-md bg-white/70 p-3 text-sm text-emerald-950">
+                                {{ proposal.payment.instructions }}
+                            </p>
+                        </div>
+
                     </aside>
                 </div>
 

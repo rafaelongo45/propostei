@@ -17,6 +17,14 @@ defineProps({
 
 const user = usePage().props.auth.user;
 
+const pixKeyTypes = {
+    cpf: 'CPF',
+    cnpj: 'CNPJ',
+    email: 'E-mail',
+    phone: 'Telefone',
+    random: 'Chave aleatória',
+};
+
 const form = useForm({
     _method: 'patch',
     name: user.name,
@@ -24,6 +32,11 @@ const form = useForm({
     company_name: user.company_name || '',
     company_logo: null,
     remove_company_logo: false,
+    payment_pix_key: user.payment_pix_key || '',
+    payment_pix_key_type: user.payment_pix_key_type || '',
+    payment_recipient_name: user.payment_recipient_name || '',
+    payment_link: user.payment_link || '',
+    payment_instructions: user.payment_instructions || '',
 });
 
 const cleanOptional = (value) => value?.trim() || '';
@@ -33,6 +46,11 @@ const submit = () => {
     form.name = cleanOptional(form.name);
     form.email = cleanEmail(form.email);
     form.company_name = cleanOptional(form.company_name);
+    form.payment_pix_key = cleanOptional(form.payment_pix_key);
+    form.payment_pix_key_type = cleanOptional(form.payment_pix_key_type);
+    form.payment_recipient_name = cleanOptional(form.payment_recipient_name);
+    form.payment_link = cleanOptional(form.payment_link);
+    form.payment_instructions = cleanOptional(form.payment_instructions);
 
     form.post(route('profile.update'), {
         forceFormData: true,
@@ -147,6 +165,97 @@ const submit = () => {
 
                 <InputError class="mt-2" :message="form.errors.company_logo" />
                 <InputError class="mt-2" :message="form.errors.remove_company_logo" />
+            </div>
+
+            <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
+                <h3 class="text-base font-semibold text-gray-900">Dados de pagamento</h3>
+                <p class="mt-1 text-sm text-gray-600">
+                    Estes dados aparecerão nas propostas públicas e nos PDFs enviados aos clientes, apenas quando preenchidos.
+                </p>
+
+                <div class="mt-5 grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <InputLabel for="payment_pix_key_type" value="Tipo da chave Pix" />
+
+                        <select
+                            id="payment_pix_key_type"
+                            v-model="form.payment_pix_key_type"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        >
+                            <option value="">Selecione, se usar Pix</option>
+                            <option v-for="(label, value) in pixKeyTypes" :key="value" :value="value">
+                                {{ label }}
+                            </option>
+                        </select>
+
+                        <InputError class="mt-2" :message="form.errors.payment_pix_key_type" />
+                    </div>
+
+                    <div>
+                        <InputLabel for="payment_pix_key" value="Chave Pix" />
+
+                        <TextInput
+                            id="payment_pix_key"
+                            v-model="form.payment_pix_key"
+                            type="text"
+                            class="mt-1 block w-full"
+                            maxlength="255"
+                            placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
+                            @blur="form.payment_pix_key = cleanOptional(form.payment_pix_key)"
+                        />
+
+                        <InputError class="mt-2" :message="form.errors.payment_pix_key" />
+                    </div>
+
+                    <div>
+                        <InputLabel for="payment_recipient_name" value="Nome do favorecido" />
+
+                        <TextInput
+                            id="payment_recipient_name"
+                            v-model="form.payment_recipient_name"
+                            type="text"
+                            class="mt-1 block w-full"
+                            maxlength="255"
+                            placeholder="Nome que aparecerá para pagamento"
+                            @blur="form.payment_recipient_name = cleanOptional(form.payment_recipient_name)"
+                        />
+
+                        <InputError class="mt-2" :message="form.errors.payment_recipient_name" />
+                    </div>
+
+                    <div>
+                        <InputLabel for="payment_link" value="Link de pagamento externo" />
+
+                        <TextInput
+                            id="payment_link"
+                            v-model="form.payment_link"
+                            type="url"
+                            class="mt-1 block w-full"
+                            maxlength="2048"
+                            placeholder="https://..."
+                            inputmode="url"
+                            @blur="form.payment_link = cleanOptional(form.payment_link)"
+                        />
+
+                        <InputError class="mt-2" :message="form.errors.payment_link" />
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <InputLabel for="payment_instructions" value="Instruções de pagamento" />
+
+                        <textarea
+                            id="payment_instructions"
+                            v-model="form.payment_instructions"
+                            rows="4"
+                            maxlength="2000"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="Ex.: Após o aceite, realize o pagamento de 50% para início do projeto."
+                            @blur="form.payment_instructions = cleanOptional(form.payment_instructions)"
+                        />
+
+                        <InputError class="mt-2" :message="form.errors.payment_instructions" />
+                    </div>
+                </div>
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">

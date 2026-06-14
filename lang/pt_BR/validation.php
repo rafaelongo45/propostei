@@ -28,6 +28,7 @@ return [
     'required' => 'O campo :attribute é obrigatório.',
     'string' => 'O campo :attribute deve ser um texto.',
     'unique' => 'Este :attribute já está em uso.',
+    'url' => 'O campo :attribute deve ser uma URL válida.',
     'mimes' => 'O campo :attribute deve ser um arquivo do tipo: :values.',
 
     'password' => [
@@ -60,6 +61,11 @@ return [
         'notes' => 'observações',
         'password' => 'senha',
         'password_confirmation' => 'confirmação de senha',
+        'payment_instructions' => 'instruções de pagamento',
+        'payment_link' => 'link de pagamento',
+        'payment_pix_key' => 'chave Pix',
+        'payment_pix_key_type' => 'tipo da chave Pix',
+        'payment_recipient_name' => 'nome do favorecido',
         'phone' => 'telefone',
         'rejected_by_email' => 'e-mail do responsável',
         'rejected_by_name' => 'nome do responsável',

@@ -15,7 +15,7 @@ class PublicProposalController extends Controller
     {
         $proposal = Proposal::query()
             ->where('public_token', $token)
-            ->with(['client', 'items'])
+            ->with(['client', 'items', 'user'])
             ->firstOrFail();
 
         return Inertia::render('Public/Proposal', [
@@ -47,6 +47,7 @@ class PublicProposalController extends Controller
                 'manual_discount' => (float) $proposal->manual_discount,
                 'subtotal' => $proposal->subtotal,
                 'total' => $proposal->total,
+                'payment' => $proposal->user?->paymentDetails() ?: null,
                 'accept_url' => route('public.proposals.accept', $proposal->public_token),
                 'reject_url' => route('public.proposals.reject', $proposal->public_token),
                 'pdf_url' => route('public.proposals.pdf', $proposal->public_token),
