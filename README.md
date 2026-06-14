@@ -1,58 +1,138 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# propostei
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+MVP comercial para freelancers e pequenos prestadores criarem propostas profissionais, compartilharem um link público, receberem aceite/recusa e baixarem PDF.
 
-## About Laravel
+## Requisitos
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Docker e Docker Compose
+- Node.js e npm, se preferir rodar o Vite fora do Docker
+- Composer/PHP local apenas se não for usar Docker
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Setup com Docker
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+1. Copie o ambiente:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+cp .env.example .env
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+2. Confira as variáveis principais:
 
-## Contributing
+```env
+APP_URL=http://localhost:8081
+APP_PORT=8081
+DB_CONNECTION=pgsql
+DB_HOST=postgres
+DB_PORT=5432
+DB_FORWARD_PORT=5433
+DB_DATABASE=propostei
+DB_TEST_DATABASE=propostei_test
+DB_USERNAME=propostei
+DB_PASSWORD=propostei
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+3. Suba a aplicação:
 
-## Code of Conduct
+```bash
+docker compose up -d --build
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+4. Prepare o Laravel:
 
-## Security Vulnerabilities
+```bash
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan storage:link
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+5. Acesse:
 
-## License
+```text
+http://localhost:8081
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Usuário seedado:
+
+```text
+test@example.com
+password
+```
+
+## Vite
+
+O build de produção dos assets roda durante o build da imagem Docker. Para desenvolvimento com hot reload dentro do Docker:
+
+```bash
+docker compose --profile dev up -d node
+```
+
+Ou rode localmente:
+
+```bash
+npm install
+npm run dev
+```
+
+## Fluxo principal
+
+1. Faça login ou crie uma conta.
+2. Edite o perfil e informe o nome da empresa/marca, se houver.
+3. Envie um logo em PNG, JPG ou WebP até 2 MB.
+4. Cadastre um cliente.
+5. Crie uma proposta com itens e valores.
+6. Copie o link público, envie por WhatsApp ou envie por e-mail pelo sistema.
+7. Abra o link público como cliente e aceite ou recuse.
+8. Baixe o PDF da proposta.
+
+O PDF prioriza a identidade do prestador: exibe o logo cadastrado, ou o nome da empresa, ou o nome do usuário. Observações internas e IPs de aceite/recusa não aparecem no PDF nem nas telas públicas.
+
+## E-mail e fila
+
+O envio por e-mail usa Laravel Mail dentro de um Job. Ao clicar em “Enviar por e-mail”, a aplicação registra o pedido, coloca o Job na fila e o worker envia a mensagem. A proposta só muda para `sent` depois que o Job envia o e-mail com sucesso.
+
+No Docker, o serviço `worker` já roda:
+
+```bash
+docker compose ps
+```
+
+Fora do Docker, rode o worker manualmente:
+
+```bash
+php artisan queue:work
+```
+
+Configuração local padrão:
+
+```env
+MAIL_MAILER=log
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS="noreply@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+QUEUE_CONNECTION=database
+```
+
+Para produção, configure SMTP ou provedor transacional. O remetente deve ser do domínio/sistema, e o e-mail do usuário entra como `Reply-To`, evitando enviar como se fosse o endereço pessoal do prestador.
+
+## Comandos úteis
+
+```bash
+npm run build
+./vendor/bin/pint --dirty
+php artisan route:list
+php artisan migrate
+php artisan test
+```
+
+Com Docker:
+
+```bash
+docker compose exec app php artisan migrate:fresh --seed
+docker compose exec app php artisan route:list
+docker compose exec app php artisan storage:link
+```
+
+O PostgreSQL cria o banco principal `propostei` e, na primeira inicialização do volume, também cria `propostei_test`.

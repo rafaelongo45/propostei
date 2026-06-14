@@ -6,13 +6,14 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
+#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo_path'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -40,5 +41,12 @@ class User extends Authenticatable
     public function proposals(): HasMany
     {
         return $this->hasMany(Proposal::class);
+    }
+
+    protected function companyLogoUrl(): Attribute
+    {
+        return Attribute::get(fn () => $this->company_logo_path
+            ? asset('storage/'.$this->company_logo_path)
+            : null);
     }
 }

@@ -24,6 +24,7 @@
             border-bottom: 1px solid #e5e7eb;
             margin-bottom: 24px;
             padding-bottom: 18px;
+            page-break-inside: avoid;
         }
 
         .brand {
@@ -31,6 +32,19 @@
             font-size: 24px;
             font-weight: 700;
             letter-spacing: 0;
+        }
+
+        .brand-logo {
+            display: block;
+            margin-bottom: 10px;
+            max-height: 64px;
+            max-width: 220px;
+        }
+
+        .creator {
+            color: #030712;
+            font-size: 16px;
+            margin-top: 4px;
         }
 
         .proposal-meta {
@@ -63,12 +77,14 @@
 
         .section {
             margin-top: 22px;
+            page-break-inside: avoid;
         }
 
         .box {
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 14px;
+            page-break-inside: avoid;
         }
 
         .grid {
@@ -87,6 +103,39 @@
             padding-left: 14px;
         }
 
+        .info-section + .info-section {
+            margin-top: 12px;
+        }
+
+        .info-list {
+            border-top: 1px solid #f3f4f6;
+            padding-top: 2px;
+        }
+
+        .info-row {
+            border-bottom: 1px solid #f3f4f6;
+            padding: 7px 0;
+        }
+
+        .info-row:last-child {
+            border-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .info-label {
+            color: #6b7280;
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            width: 96px;
+        }
+
+        .info-value {
+            color: #111827;
+            font-weight: 700;
+        }
+
         .label {
             color: #6b7280;
             font-size: 10px;
@@ -99,37 +148,23 @@
             font-weight: 700;
         }
 
-        .status {
-            border-radius: 999px;
-            display: inline-block;
-            font-size: 11px;
-            font-weight: 700;
-            padding: 5px 10px;
-        }
-
-        .status-draft {
-            background: #f1f5f9;
-            color: #334155;
-        }
-
-        .status-sent {
-            background: #eff6ff;
-            color: #1d4ed8;
-        }
-
-        .status-accepted {
-            background: #ecfdf5;
-            color: #047857;
-        }
-
-        .status-rejected {
-            background: #fff1f2;
-            color: #be123c;
-        }
-
         table {
             border-collapse: collapse;
+            page-break-inside: auto;
             width: 100%;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tfoot {
+            display: table-row-group;
+        }
+
+        tr {
+            page-break-after: auto;
+            page-break-inside: avoid;
         }
 
         th {
@@ -153,31 +188,54 @@
         }
 
         .totals {
-            margin-left: auto;
+            border: 1px solid #e5e7eb;
             margin-top: 14px;
-            width: 260px;
-        }
-
-        .total-row {
-            display: table;
+            page-break-inside: avoid;
+            padding: 10px 12px;
             width: 100%;
         }
 
-        .total-row div {
+        .total-line {
+            display: table;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .total-item {
             display: table-cell;
-            padding: 5px 0;
+            padding-right: 14px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .total-item:last-child {
+            padding-right: 0;
+        }
+
+        .total-label {
+            color: #6b7280;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .total-value {
+            color: #111827;
+            font-weight: 700;
         }
 
         .total-final {
-            border-top: 1px solid #d1d5db;
             font-size: 15px;
             font-weight: 700;
-            margin-top: 6px;
-            padding-top: 8px;
         }
 
         .note {
             white-space: pre-line;
+        }
+
+        .intro-text {
+            margin: 0;
+            padding: 12px 14px;
         }
 
         .footer {
@@ -188,77 +246,86 @@
             padding-top: 12px;
             text-align: center;
         }
+
+        .client-info,
+        .proposal-info,
+        .summary,
+        .acceptance,
+        .rejection {
+            page-break-inside: avoid;
+        }
     </style>
 </head>
 <body>
 @php
     $money = fn ($value) => 'R$ '.number_format((float) $value, 2, ',', '.');
     $date = fn ($value) => $value ? $value->format('d/m/Y') : 'Não informada';
-    $status = $proposal->status;
+    $creatorName = $proposal->user?->company_name ?: $proposal->user?->name ?: 'Prestador';
 @endphp
 
 <div class="header">
-    <div class="brand">propostei</div>
+    @if ($companyLogoPath)
+        <img src="{{ $companyLogoPath }}" alt="{{ $creatorName }}" class="brand-logo">
+        <div class="brand">{{ $creatorName }}</div>
+    @else
+        <div class="brand">{{ $creatorName }}</div>
+    @endif
     <div class="proposal-meta">Proposta comercial</div>
     <h1>{{ $proposal->title }}</h1>
-    <span class="status status-{{ $status }}">{{ $statusLabels[$status] ?? $status }}</span>
 </div>
 
-<div class="grid">
-    <div class="grid-cell">
-        <div class="box">
-            <h2>Cliente</h2>
-            <div class="label">Nome</div>
-            <div class="value">{{ $proposal->client->name }}</div>
-
-            @if ($proposal->client->company)
-                <div style="margin-top: 8px;">
-                    <div class="label">Empresa</div>
-                    <div>{{ $proposal->client->company }}</div>
-                </div>
-            @endif
-
-            @if ($proposal->client->email)
-                <div style="margin-top: 8px;">
-                    <div class="label">E-mail</div>
-                    <div>{{ $proposal->client->email }}</div>
-                </div>
-            @endif
-
-            @if ($proposal->client->phone)
-                <div style="margin-top: 8px;">
-                    <div class="label">Telefone</div>
-                    <div>{{ $proposal->client->phone }}</div>
-                </div>
-            @endif
+<div class="box client-info info-section">
+    <h2>Cliente</h2>
+    <div class="info-list">
+        <div class="info-row">
+            <span class="info-label">Nome</span>
+            <span class="info-value">{{ $proposal->client->name }}</span>
         </div>
+
+        @if ($proposal->client->company)
+            <div class="info-row">
+                <span class="info-label">Empresa</span>
+                <span>{{ $proposal->client->company }}</span>
+            </div>
+        @endif
+
+        @if ($proposal->client->email)
+            <div class="info-row">
+                <span class="info-label">E-mail</span>
+                <span>{{ $proposal->client->email }}</span>
+            </div>
+        @endif
+
+        @if ($proposal->client->phone)
+            <div class="info-row">
+                <span class="info-label">Telefone</span>
+                <span>{{ $proposal->client->phone }}</span>
+            </div>
+        @endif
     </div>
-    <div class="grid-cell">
-        <div class="box">
-            <h2>Dados da proposta</h2>
-            <div class="grid">
-                <div class="grid-cell">
-                    <div class="label">Validade</div>
-                    <div class="value">{{ $date($proposal->valid_until) }}</div>
-                </div>
-                <div class="grid-cell">
-                    <div class="label">Prazo</div>
-                    <div class="value">{{ $proposal->delivery_estimate ?: 'Não informado' }}</div>
-                </div>
-            </div>
-            <div style="margin-top: 10px;">
-                <div class="label">Gerada em</div>
-                <div>{{ now()->format('d/m/Y H:i') }}</div>
-            </div>
+</div>
+
+<div class="box proposal-info info-section">
+    <h2>Dados da proposta</h2>
+    <div class="info-list">
+        <div class="info-row">
+            <span class="info-label">Validade</span>
+            <span class="info-value">{{ $date($proposal->valid_until) }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Prazo</span>
+            <span class="info-value">{{ $proposal->delivery_estimate ?: 'Não informado' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Gerada em</span>
+            <span>{{ now()->format('d/m/Y H:i') }}</span>
         </div>
     </div>
 </div>
 
 <div class="section">
     <h2>Introdução</h2>
-    <div class="box note">
-        {{ $proposal->introduction ?: 'Sem descrição informada.' }}
-    </div>
+    <div class="box note intro-text">{{ trim($proposal->introduction ?: 'Sem descrição informada.') }}</div>
 </div>
 
 <div class="section">
@@ -284,26 +351,26 @@
         </tbody>
     </table>
 
-    <div class="totals">
-        <div class="total-row">
-            <div>Subtotal</div>
-            <div class="right">{{ $money($proposal->subtotal) }}</div>
-        </div>
-        @if ((float) $proposal->manual_discount > 0)
-            <div class="total-row">
-                <div>Desconto</div>
-                <div class="right">{{ $money($proposal->manual_discount) }}</div>
+    <div class="totals summary">
+        <div class="total-line">
+            <div class="total-item">
+                <span class="total-label">Subtotal:</span>
+                <span class="total-value">{{ $money($proposal->subtotal) }}</span>
             </div>
-        @endif
-        <div class="total-row total-final">
-            <div>Total</div>
-            <div class="right">{{ $money($proposal->total) }}</div>
+            <div class="total-item">
+                <span class="total-label">Desconto:</span>
+                <span class="total-value">{{ $money($proposal->manual_discount) }}</span>
+            </div>
+            <div class="total-item">
+                <span class="total-label">Total:</span>
+                <span class="total-value total-final">{{ $money($proposal->total) }}</span>
+            </div>
         </div>
     </div>
 </div>
 
 @if ($proposal->status === 'accepted')
-    <div class="section">
+    <div class="section acceptance">
         <div class="box">
             <h2>Aceite da proposta</h2>
             <div class="grid">
@@ -333,7 +400,7 @@
 @endif
 
 @if ($proposal->status === 'rejected')
-    <div class="section">
+    <div class="section rejection">
         <div class="box">
             <h2>Recusa da proposta</h2>
             <div class="grid">

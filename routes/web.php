@@ -18,6 +18,7 @@ Route::get('/', function () {
 });
 
 Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('public.proposals.show');
+Route::get('/p/{token}/pdf', [PublicProposalController::class, 'downloadPdf'])->name('public.proposals.pdf');
 Route::post('/p/{token}/accept', [PublicProposalController::class, 'accept'])->name('public.proposals.accept');
 Route::post('/p/{token}/reject', [PublicProposalController::class, 'reject'])->name('public.proposals.reject');
 
@@ -25,6 +26,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [ProposalController::class, 'index'])->name('dashboard');
     Route::resource('clients', ClientController::class);
     Route::get('/proposals/{proposal}/pdf', [ProposalController::class, 'downloadPdf'])->name('proposals.pdf');
+    Route::post('/proposals/{proposal}/send', [ProposalController::class, 'send'])->name('proposals.send');
+    Route::post('/proposals/{proposal}/link-copied', [ProposalController::class, 'linkCopied'])->name('proposals.link-copied');
     Route::resource('proposals', ProposalController::class);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

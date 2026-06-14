@@ -1,6 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     proposal: Object,
@@ -13,6 +13,24 @@ const statusLabels = {
     sent: 'Enviada',
     accepted: 'Aceita',
     rejected: 'Recusada',
+};
+
+const eventLabels = {
+    created: 'Proposta criada',
+    updated: 'Proposta atualizada',
+    email_queued: 'Envio por e-mail colocado na fila',
+    email_failed: 'Falha no envio por e-mail',
+    sent_email: 'Proposta enviada por e-mail',
+    sent_whatsapp: 'Proposta enviada por WhatsApp',
+    link_copied: 'Link público copiado',
+    accepted: 'Proposta aceita',
+    rejected: 'Proposta recusada',
+    pdf_downloaded: 'PDF baixado',
+};
+
+const channelLabels = {
+    whatsapp: 'WhatsApp',
+    email: 'E-mail',
 };
 
 const formatMoney = (value) =>
@@ -33,6 +51,34 @@ const formatDate = (value) => {
 
 const copyPublicUrl = async () => {
     await navigator.clipboard.writeText(props.proposal.public_url);
+    router.post(props.proposal.link_copied_url, {}, {
+        preserveScroll: true,
+    });
+};
+
+const whatsappUrl = () => {
+    const message = `Olá, ${props.proposal.client.name}! Segue o link da proposta comercial: ${props.proposal.public_url}`;
+    const phone = (props.proposal.client.phone || '').replace(/\D/g, '');
+    const normalizedPhone = phone.length >= 10 && !phone.startsWith('55') ? `55${phone}` : phone;
+
+    return normalizedPhone
+        ? `https://wa.me/${normalizedPhone}?text=${encodeURIComponent(message)}`
+        : `https://wa.me/?text=${encodeURIComponent(message)}`;
+};
+
+const registerSend = (channel) => {
+    router.post(props.proposal.send_url, { channel }, {
+        preserveScroll: true,
+    });
+};
+
+const sendWhatsapp = () => {
+    window.open(whatsappUrl(), '_blank', 'noopener,noreferrer');
+    registerSend('whatsapp');
+};
+
+const sendEmail = () => {
+    registerSend('email');
 };
 </script>
 
@@ -63,6 +109,21 @@ const copyPublicUrl = async () => {
                     >
                         Baixar PDF
                     </a>
+                    <!-- <button
+                        type="button"
+                        class="inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                        @click="sendEmail"
+                        hidden
+                    >
+                        Enviar por e-mail
+                    </button> -->
+                    <button
+                        type="button"
+                        class="inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+                        @click="sendWhatsapp"
+                    >
+                        Enviar por WhatsApp
+                    </button>
                     <a
                         :href="proposal.public_url"
                         target="_blank"
@@ -81,6 +142,13 @@ const copyPublicUrl = async () => {
                     class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
                 >
                     {{ page.props.flash.success }}
+                </div>
+
+                <div
+                    v-if="page.props.flash?.error"
+                    class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+                >
+                    {{ page.props.flash.error }}
                 </div>
 
                 <div
@@ -167,6 +235,14 @@ const copyPublicUrl = async () => {
                                     <dt class="text-gray-500">Prazo</dt>
                                     <dd>{{ proposal.delivery_estimate || 'Não informado' }}</dd>
                                 </div>
+                                <div v-if="proposal.sent_at">
+                                    <dt class="text-gray-500">Enviada em</dt>
+                                    <dd>{{ proposal.sent_at }}</dd>
+                                </div>
+                                <div v-if="proposal.sent_channel">
+                                    <dt class="text-gray-500">Canal</dt>
+                                    <dd>{{ channelLabels[proposal.sent_channel] || proposal.sent_channel }}</dd>
+                                </div>
                             </dl>
                         </section>
 
@@ -228,6 +304,26 @@ const copyPublicUrl = async () => {
                             >
                                 Copiar link
                             </button>
+                        </section>
+
+                        <section
+                            v-if="proposal.events?.length"
+                            class="flex max-h-64 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
+                        >
+                            <div class="text-sm font-medium text-gray-500">Timeline</div>
+                            <ol class="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto pr-2 text-sm text-gray-700">
+                                <li v-for="event in proposal.events" :key="event.id" class="border-l border-gray-200 pl-3">
+                                    <div class="font-medium text-gray-900">
+                                        {{ eventLabels[event.type] || event.type }}
+                                    </div>
+                                    <div class="text-gray-500">
+                                        {{ event.created_at }}
+                                    </div>
+                                    <div v-if="event.metadata?.message" class="mt-1 break-words text-xs text-rose-700">
+                                        {{ event.metadata.message }}
+                                    </div>
+                                </li>
+                            </ol>
                         </section>
                     </aside>
                 </div>

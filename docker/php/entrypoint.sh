@@ -5,9 +5,11 @@ if [ ! -f .env ] && [ -f .env.example ]; then
     cp .env.example .env
 fi
 
-if [ ! -f public/index.php ] && [ -d public-dist ]; then
+if [ -d public-dist ]; then
     cp -a public-dist/. public/
 fi
+
+rm -f public/hot
 
 chown -R www-data:www-data storage bootstrap/cache public
 

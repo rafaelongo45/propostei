@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Proposal;
+use App\Services\ProposalPdfService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -48,8 +49,20 @@ class PublicProposalController extends Controller
                 'total' => $proposal->total,
                 'accept_url' => route('public.proposals.accept', $proposal->public_token),
                 'reject_url' => route('public.proposals.reject', $proposal->public_token),
+                'pdf_url' => route('public.proposals.pdf', $proposal->public_token),
             ],
         ]);
+    }
+
+    public function downloadPdf(string $token, ProposalPdfService $pdfService)
+    {
+        $proposal = Proposal::query()
+            ->where('public_token', $token)
+            ->firstOrFail();
+
+        $proposal->recordEvent('pdf_downloaded');
+
+        return $pdfService->download($proposal);
     }
 
     public function accept(Request $request, string $token): RedirectResponse
@@ -72,6 +85,11 @@ class PublicProposalController extends Controller
                 'accepted_by_email' => $data['accepted_by_email'] ?? null,
                 'accepted_by_ip' => $request->ip(),
                 'acceptance_notes' => $data['acceptance_notes'] ?? null,
+            ]);
+
+            $proposal->recordEvent('accepted', metadata: [
+                'name' => $data['accepted_by_name'],
+                'email' => $data['accepted_by_email'] ?? null,
             ]);
         }
 
@@ -98,6 +116,11 @@ class PublicProposalController extends Controller
                 'rejected_by_email' => $data['rejected_by_email'] ?? null,
                 'rejected_by_ip' => $request->ip(),
                 'rejection_reason' => $data['rejection_reason'],
+            ]);
+
+            $proposal->recordEvent('rejected', metadata: [
+                'name' => $data['rejected_by_name'],
+                'email' => $data['rejected_by_email'] ?? null,
             ]);
         }
 

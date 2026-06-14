@@ -18,6 +18,9 @@ class ProfileUpdateRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'min:2', 'max:255'],
+            'company_name' => ['nullable', 'string', 'max:255'],
+            'company_logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_company_logo' => ['nullable', 'boolean'],
             'email' => [
                 'required',
                 'string',

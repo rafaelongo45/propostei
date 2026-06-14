@@ -7,18 +7,18 @@ services:
     env_file:
       - .env
     environment:
-      APP_ENV: production
-      APP_DEBUG: "false"
-      APP_URL: ${APP_URL:-http://localhost:8080}
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8081}
       DB_CONNECTION: pgsql
-      DB_HOST: db
+      DB_HOST: postgres
       DB_PORT: 5432
       DB_DATABASE: ${DB_DATABASE:-propostei}
       DB_USERNAME: ${DB_USERNAME:-propostei}
-      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      DB_PASSWORD: ${DB_PASSWORD:-propostei}
       RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
     depends_on:
-      db:
+      postgres:
         condition: service_healthy
     volumes:
       - public:/var/www/html/public
@@ -31,23 +31,64 @@ services:
     depends_on:
       - app
     ports:
-      - "${APP_PORT:-8080}:80"
+      - "${APP_PORT:-8081}:80"
     volumes:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - public:/var/www/html/public:ro
       - storage:/var/www/html/storage:ro
 
-  db:
+  worker:
+    image: proposta-facil-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      APP_DEBUG: ${APP_DEBUG:-true}
+      APP_URL: ${APP_URL:-http://localhost:8081}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-propostei}
+      DB_USERNAME: ${DB_USERNAME:-propostei}
+      DB_PASSWORD: ${DB_PASSWORD:-propostei}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - public:/var/www/html/public
+      - storage:/var/www/html/storage
+      - cache:/var/www/html/bootstrap/cache
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+
+  node:
+    image: node:24-alpine
+    working_dir: /app
+    profiles:
+      - dev
+    ports:
+      - "${VITE_PORT:-5173}:5173"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+
+  postgres:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_DATABASE:-propostei}
       POSTGRES_USER: ${DB_USERNAME:-propostei}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-propostei}
+      POSTGRES_TEST_DB: ${DB_TEST_DATABASE:-propostei_test}
     ports:
-      - "${DB_FORWARD_PORT:-5432}:5432"
+      - "${DB_FORWARD_PORT:-5433}:5432"
     volumes:
       - postgres:/var/lib/postgresql/data
+      - ./docker/postgres/create-test-database.sh:/docker-entrypoint-initdb.d/10-create-test-database.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-propostei} -d ${DB_DATABASE:-propostei}"]
       interval: 10s
@@ -59,3 +100,4 @@ volumes:
   public:
   storage:
   cache:
+  node_modules:

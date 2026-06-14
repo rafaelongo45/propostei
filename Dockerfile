@@ -1,13 +1,3 @@
-FROM node:24-alpine AS assets
-
-WORKDIR /app
-
-COPY package.json package-lock.json ./
-RUN npm ci
-
-COPY . .
-RUN npm run build
-
 FROM composer:2 AS composer
 
 WORKDIR /app
@@ -20,6 +10,17 @@ RUN composer install \
     --prefer-dist \
     --no-scripts \
     --optimize-autoloader
+
+FROM node:24-alpine AS assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+COPY --from=composer /app/vendor ./vendor
+RUN npm run build
 
 FROM php:8.4-fpm-bookworm
 

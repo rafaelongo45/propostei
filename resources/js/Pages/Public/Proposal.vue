@@ -331,6 +331,12 @@ const rejectProposal = () => {
                                 {{ proposal.acceptance_notes }}
                             </p>
                         </div>
+                        <a
+                            :href="proposal.pdf_url"
+                            class="mt-5 inline-flex rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800"
+                        >
+                            Baixar PDF da proposta
+                        </a>
                     </div>
 
                     <div

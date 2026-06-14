@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-#[Fillable(['user_id', 'client_id', 'title', 'introduction', 'valid_until', 'delivery_estimate', 'status', 'accepted_at', 'accepted_by_name', 'accepted_by_email', 'accepted_by_ip', 'acceptance_notes', 'rejected_at', 'rejected_by_name', 'rejected_by_email', 'rejected_by_ip', 'rejection_reason', 'internal_notes', 'public_token', 'manual_discount'])]
+#[Fillable(['user_id', 'client_id', 'title', 'introduction', 'valid_until', 'delivery_estimate', 'status', 'sent_at', 'sent_channel', 'accepted_at', 'accepted_by_name', 'accepted_by_email', 'accepted_by_ip', 'acceptance_notes', 'rejected_at', 'rejected_by_name', 'rejected_by_email', 'rejected_by_ip', 'rejection_reason', 'internal_notes', 'public_token', 'manual_discount'])]
 class Proposal extends Model
 {
     /** @use HasFactory<ProposalFactory> */
@@ -23,6 +23,7 @@ class Proposal extends Model
     {
         return [
             'valid_until' => 'date',
+            'sent_at' => 'datetime',
             'accepted_at' => 'datetime',
             'rejected_at' => 'datetime',
             'manual_discount' => 'decimal:2',
@@ -49,6 +50,36 @@ class Proposal extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ProposalItem::class)->orderBy('sort_order');
+    }
+
+    public function events(): HasMany
+    {
+        return $this->hasMany(ProposalEvent::class)->latest();
+    }
+
+    public function markAsSent(string $channel): void
+    {
+        $updates = [
+            'sent_at' => now(),
+            'sent_channel' => $channel,
+        ];
+
+        if ($this->status === 'draft') {
+            $updates['status'] = 'sent';
+        }
+
+        if (! in_array($this->status, ['accepted', 'rejected'], true)) {
+            $this->update($updates);
+        }
+    }
+
+    public function recordEvent(string $type, ?string $channel = null, ?array $metadata = null): ProposalEvent
+    {
+        return $this->events()->create([
+            'type' => $type,
+            'channel' => $channel,
+            'metadata' => $metadata,
+        ]);
     }
 
     public function getSubtotalAttribute(): float

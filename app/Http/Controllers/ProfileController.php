@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,13 +30,31 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $data = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($request->boolean('remove_company_logo') && $user->company_logo_path) {
+            Storage::disk('public')->delete($user->company_logo_path);
+            $data['company_logo_path'] = null;
         }
 
-        $request->user()->save();
+        if ($request->hasFile('company_logo')) {
+            if ($user->company_logo_path) {
+                Storage::disk('public')->delete($user->company_logo_path);
+            }
+
+            $data['company_logo_path'] = $request->file('company_logo')->store('company-logos', 'public');
+        }
+
+        unset($data['company_logo'], $data['remove_company_logo']);
+
+        $user->fill($data);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
 
         return Redirect::route('profile.edit');
     }

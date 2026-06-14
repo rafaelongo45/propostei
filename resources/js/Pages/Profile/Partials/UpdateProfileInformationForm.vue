@@ -17,9 +17,24 @@ defineProps({
 const user = usePage().props.auth.user;
 
 const form = useForm({
+    _method: 'patch',
     name: user.name,
     email: user.email,
+    company_name: user.company_name || '',
+    company_logo: null,
+    remove_company_logo: false,
 });
+
+const submit = () => {
+    form.post(route('profile.update'), {
+        forceFormData: true,
+        preserveScroll: true,
+        onSuccess: () => {
+            form.company_logo = null;
+            form.remove_company_logo = false;
+        },
+    });
+};
 </script>
 
 <template>
@@ -34,10 +49,7 @@ const form = useForm({
             </p>
         </header>
 
-        <form
-            @submit.prevent="form.patch(route('profile.update'))"
-            class="mt-6 space-y-6"
-        >
+        <form @submit.prevent="submit" class="mt-6 space-y-6">
             <div>
                 <InputLabel for="name" value="Nome" />
 
@@ -71,6 +83,57 @@ const form = useForm({
                 />
 
                 <InputError class="mt-2" :message="form.errors.email" />
+            </div>
+
+            <div>
+                <InputLabel for="company_name" value="Nome da empresa ou marca" />
+
+                <TextInput
+                    id="company_name"
+                    type="text"
+                    class="mt-1 block w-full"
+                    v-model="form.company_name"
+                    maxlength="255"
+                    autocomplete="organization"
+                    placeholder="Ex.: Longo Studio"
+                />
+
+                <InputError class="mt-2" :message="form.errors.company_name" />
+            </div>
+
+            <div>
+                <InputLabel for="company_logo" value="Logo da empresa" />
+
+                <div v-if="user.company_logo_url && !form.remove_company_logo" class="mt-3 flex items-center gap-4">
+                    <img
+                        :src="user.company_logo_url"
+                        alt="Logo atual"
+                        class="h-16 w-16 rounded-md border border-gray-200 object-contain p-2"
+                    />
+                    <label class="flex items-center gap-2 text-sm text-gray-700">
+                        <input
+                            v-model="form.remove_company_logo"
+                            type="checkbox"
+                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                        />
+                        Remover logo atual
+                    </label>
+                </div>
+
+                <input
+                    id="company_logo"
+                    type="file"
+                    class="mt-3 block w-full text-sm text-gray-700 file:mr-4 file:rounded-md file:border-0 file:bg-gray-900 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-gray-700"
+                    accept="image/png,image/jpeg,image/webp"
+                    @input="form.company_logo = $event.target.files[0]"
+                />
+
+                <p class="mt-2 text-sm text-gray-500">
+                    PNG, JPG ou WebP até 2 MB. O logo aparece no PDF da proposta.
+                </p>
+
+                <InputError class="mt-2" :message="form.errors.company_logo" />
+                <InputError class="mt-2" :message="form.errors.remove_company_logo" />
             </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">

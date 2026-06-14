@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendProposalEmailJob;
 use App\Models\Proposal;
 use App\Services\ProposalPdfService;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +20,7 @@ class ProposalController extends Controller
     public function index(Request $request): Response
     {
         $proposals = $request->user()->proposals()
-            ->with(['client', 'items'])
+            ->with(['client', 'items', 'events'])
             ->latest()
             ->get()
             ->map(fn (Proposal $proposal) => $this->proposalPayload($proposal));
@@ -75,6 +76,7 @@ class ProposalController extends Controller
 
             $proposal = $request->user()->proposals()->create($proposalData);
             $this->syncItems($proposal, $data['items']);
+            $proposal->recordEvent('created');
 
             return $proposal;
         });
@@ -88,7 +90,7 @@ class ProposalController extends Controller
     public function show(Proposal $proposal): Response
     {
         $this->authorizeProposal($proposal);
-        $proposal->load(['client', 'items']);
+        $proposal->load(['client', 'items', 'events']);
 
         return Inertia::render('Proposals/Show', [
             'proposal' => $this->proposalPayload($proposal),
@@ -98,8 +100,51 @@ class ProposalController extends Controller
     public function downloadPdf(Proposal $proposal, ProposalPdfService $pdfService)
     {
         $this->authorizeProposal($proposal);
+        $proposal->recordEvent('pdf_downloaded');
 
         return $pdfService->download($proposal);
+    }
+
+    public function send(Request $request, Proposal $proposal): RedirectResponse
+    {
+        $this->authorizeProposal($proposal);
+
+        $data = $request->validate([
+            'channel' => ['required', Rule::in(['whatsapp', 'email'])],
+        ]);
+
+        if ($data['channel'] === 'email') {
+            if (! $proposal->client?->email) {
+                return back()->with('error', 'Cadastre um e-mail para o cliente antes de enviar a proposta.');
+            }
+
+            if (in_array($proposal->status, ['accepted', 'rejected'], true)) {
+                return back()->with('error', 'Propostas aceitas ou recusadas não podem ser reenviadas por este fluxo.');
+            }
+
+            $proposal->recordEvent('email_queued', 'email', [
+                'to' => $proposal->client->email,
+            ]);
+
+            SendProposalEmailJob::dispatch($proposal->id);
+
+            return back()->with('success', 'Envio por e-mail colocado na fila.');
+        }
+
+        DB::transaction(function () use ($proposal, $data): void {
+            $proposal->markAsSent($data['channel']);
+            $proposal->recordEvent('sent_whatsapp', $data['channel']);
+        });
+
+        return back()->with('success', 'Envio registrado com sucesso.');
+    }
+
+    public function linkCopied(Proposal $proposal): RedirectResponse
+    {
+        $this->authorizeProposal($proposal);
+        $proposal->recordEvent('link_copied');
+
+        return back()->with('success', 'Link copiado.');
     }
 
     /**
@@ -139,6 +184,7 @@ class ProposalController extends Controller
 
             $proposal->update($proposalData);
             $this->syncItems($proposal, $data['items']);
+            $proposal->recordEvent('updated');
         });
 
         return redirect()->route('proposals.show', $proposal)->with('success', 'Proposta atualizada com sucesso.');
@@ -243,6 +289,8 @@ class ProposalController extends Controller
             'is_expired' => $isExpired,
             'delivery_estimate' => $proposal->delivery_estimate,
             'status' => $proposal->status,
+            'sent_at' => $proposal->sent_at?->format('d/m/Y H:i'),
+            'sent_channel' => $proposal->sent_channel,
             'accepted_at' => $proposal->accepted_at?->format('d/m/Y H:i'),
             'accepted_by_name' => $proposal->accepted_by_name,
             'accepted_by_email' => $proposal->accepted_by_email,
@@ -256,6 +304,8 @@ class ProposalController extends Controller
             'public_token' => $proposal->public_token,
             'public_url' => route('public.proposals.show', $proposal->public_token),
             'pdf_url' => route('proposals.pdf', $proposal),
+            'send_url' => route('proposals.send', $proposal),
+            'link_copied_url' => route('proposals.link-copied', $proposal),
             'client' => $proposal->client,
             'items' => $proposal->items->map(fn ($item) => [
                 'id' => $item->id,
@@ -267,6 +317,13 @@ class ProposalController extends Controller
             'subtotal' => $proposal->subtotal,
             'total' => $proposal->total,
             'created_at' => $proposal->created_at?->toDateString(),
+            'events' => $proposal->events->map(fn ($event) => [
+                'id' => $event->id,
+                'type' => $event->type,
+                'channel' => $event->channel,
+                'metadata' => $event->metadata,
+                'created_at' => $event->created_at?->format('d/m/Y H:i'),
+            ]),
         ];
     }
 }
