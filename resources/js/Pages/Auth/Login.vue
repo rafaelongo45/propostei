@@ -6,7 +6,7 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 
 defineProps({
     canResetPassword: {
@@ -22,6 +22,7 @@ const form = useForm({
     password: '',
     remember: false,
 });
+const page = usePage();
 
 const cleanEmail = (value) => value?.trim().toLowerCase() || '';
 
@@ -40,6 +41,26 @@ const submit = () => {
 
         <div v-if="status" class="mb-4 text-sm font-medium text-green-600">
             {{ status }}
+        </div>
+        <div
+            v-if="page.props.flash?.error"
+            class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+        >
+            {{ page.props.flash.error }}
+        </div>
+
+        <a
+            :href="route('auth.google.redirect')"
+            class="mb-5 flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+        >
+            <span class="flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 text-sm font-bold text-blue-600">G</span>
+            <span>Continuar com Google</span>
+        </a>
+
+        <div class="mb-5 flex items-center gap-3">
+            <div class="h-px flex-1 bg-gray-200" />
+            <span class="text-xs font-medium text-gray-500">ou entre com e-mail e senha</span>
+            <div class="h-px flex-1 bg-gray-200" />
         </div>
 
         <form novalidate @submit.prevent="submit">

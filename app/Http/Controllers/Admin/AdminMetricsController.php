@@ -14,6 +14,9 @@ class AdminMetricsController extends Controller
     private const EVENTS = [
         'landing_viewed' => 'Visitas na landing',
         'register_clicked' => 'Cliques em cadastro',
+        'google_login_started' => 'Inícios com Google',
+        'google_login_completed' => 'Logins com Google',
+        'google_user_registered' => 'Cadastros via Google',
         'user_registered' => 'Usuários cadastrados',
         'client_created' => 'Clientes criados',
         'proposal_created' => 'Propostas criadas',

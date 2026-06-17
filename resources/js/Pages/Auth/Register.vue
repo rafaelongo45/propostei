@@ -31,6 +31,20 @@ const submit = () => {
     <GuestLayout>
         <Head title="Criar conta" />
 
+        <a
+            :href="route('auth.google.redirect')"
+            class="mb-5 flex w-full items-center justify-center gap-3 rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+        >
+            <span class="flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 text-sm font-bold text-blue-600">G</span>
+            <span>Continuar com Google</span>
+        </a>
+
+        <div class="mb-5 flex items-center gap-3">
+            <div class="h-px flex-1 bg-gray-200" />
+            <span class="text-xs font-medium text-gray-500">ou crie sua conta com e-mail e senha</span>
+            <div class="h-px flex-1 bg-gray-200" />
+        </div>
+
         <form novalidate @submit.prevent="submit">
             <FormErrorSummary class="mb-4" :errors="form.errors" />
 

@@ -14,6 +14,8 @@ const props = defineProps({
 const featuredEvents = [
     'landing_viewed',
     'register_clicked',
+    'google_login_started',
+    'google_user_registered',
     'user_registered',
     'proposal_created',
     'proposal_public_viewed',

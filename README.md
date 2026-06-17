@@ -116,6 +116,36 @@ QUEUE_CONNECTION=database
 
 Para produção, configure SMTP ou provedor transacional. O remetente deve ser do domínio/sistema, e o e-mail do usuário entra como `Reply-To`, evitando enviar como se fosse o endereço pessoal do prestador.
 
+## Login com Google
+
+O login com Google usa Laravel Socialite e mantém o login tradicional por e-mail e senha.
+
+No Google Cloud Console:
+
+1. Configure a OAuth consent screen.
+2. Crie uma credencial OAuth Client ID do tipo `Web application`.
+3. Adicione a URI autorizada de callback:
+
+```text
+https://propostei.com/auth/google/callback
+```
+
+Para ambiente local, adicione também a URL local usada no projeto, por exemplo:
+
+```text
+http://localhost:8081/auth/google/callback
+```
+
+Variáveis necessárias:
+
+```env
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI="${APP_URL}/auth/google/callback"
+```
+
+Não salve credenciais reais no repositório.
+
 ## Comandos úteis
 
 ```bash
