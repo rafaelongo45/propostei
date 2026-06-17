@@ -363,5 +363,19 @@ const registerPremiumInterest = () => {
                 </div>
             </section>
         </main>
+
+        <footer class="border-t border-slate-200 bg-white">
+            <div class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+                <div class="text-sm font-semibold text-slate-950">Guias para criar propostas</div>
+                <nav class="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-3">
+                    <a href="/modelo-de-proposta-comercial" class="hover:text-slate-950">Modelo de proposta comercial</a>
+                    <a href="/gerador-de-proposta-comercial" class="hover:text-slate-950">Gerador de proposta comercial</a>
+                    <a href="/proposta-comercial-prestacao-de-servico" class="hover:text-slate-950">Proposta para prestação de serviço</a>
+                    <a href="/modelo-de-orcamento-para-cliente" class="hover:text-slate-950">Modelo de orçamento para cliente</a>
+                    <a href="/proposta-comercial-freelancer" class="hover:text-slate-950">Proposta para freelancer</a>
+                    <a href="/contato" class="hover:text-slate-950">Contato</a>
+                </nav>
+            </div>
+        </footer>
     </div>
 </template>
