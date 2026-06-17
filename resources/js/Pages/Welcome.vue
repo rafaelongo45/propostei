@@ -373,7 +373,7 @@ const registerPremiumInterest = () => {
                     <a href="/proposta-comercial-prestacao-de-servico" class="hover:text-slate-950">Proposta para prestação de serviço</a>
                     <a href="/modelo-de-orcamento-para-cliente" class="hover:text-slate-950">Modelo de orçamento para cliente</a>
                     <a href="/proposta-comercial-freelancer" class="hover:text-slate-950">Proposta para freelancer</a>
-                    <a href="/contato" class="hover:text-slate-950">Contato</a>
+                    <a href="/sobre" class="hover:text-slate-950">Sobre o propostei</a>
                 </nav>
             </div>
         </footer>

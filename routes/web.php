@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\ClientController;
-use App\Http\Controllers\ContactController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\PremiumInterestController;
@@ -17,9 +16,9 @@ Route::get('/gerador-de-proposta-comercial', [SeoPageController::class, 'gerador
 Route::get('/proposta-comercial-prestacao-de-servico', [SeoPageController::class, 'propostaComercialPrestacaoDeServico'])->name('seo.proposta-comercial-prestacao-de-servico');
 Route::get('/modelo-de-orcamento-para-cliente', [SeoPageController::class, 'modeloDeOrcamentoParaCliente'])->name('seo.modelo-de-orcamento-para-cliente');
 Route::get('/proposta-comercial-freelancer', [SeoPageController::class, 'propostaComercialFreelancer'])->name('seo.proposta-comercial-freelancer');
-// Route::get('/sobre', [SeoPageController::class, 'sobre'])->name('seo.sobre');
-Route::get('/contato', [ContactController::class, 'create'])->name('contact.create');
-Route::post('/contato', [ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
+Route::get('/sobre', [SeoPageController::class, 'sobre'])->name('seo.sobre');
+// Route::get('/contato', [ContactController::class, 'create'])->name('contact.create');
+// Route::post('/contato', [ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 
 Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('public.proposals.show');
 Route::get('/p/{token}/pdf', [PublicProposalController::class, 'downloadPdf'])->name('public.proposals.pdf');

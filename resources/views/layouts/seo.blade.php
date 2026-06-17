@@ -7,7 +7,7 @@
         'Proposta para prestação de serviço' => url('/proposta-comercial-prestacao-de-servico'),
         'Modelo de orçamento para cliente' => url('/modelo-de-orcamento-para-cliente'),
         'Proposta para freelancer' => url('/proposta-comercial-freelancer'),
-        'Contato' => url('/contato'),
+        'Sobre o propostei' => url('/sobre'),
     ];
     $webPageSchema = [
         '@context' => 'https://schema.org',
@@ -132,8 +132,8 @@
                 <a href="{{ $ctaUrl }}" class="rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold !text-white no-underline shadow-sm transition hover:bg-teal-800">
                     @yield('primaryCta', 'Começar grátis')
                 </a>
-                <a href="{{ url('/contato') }}" class="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                    Fale conosco
+                <a href="{{ url('/gerador-de-proposta-comercial') }}" class="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Ver gerador online
                 </a>
                     </div>
                 </div>
