@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminMetricsController;
 use App\Http\Controllers\ClientController;
+use App\Http\Controllers\DemoProposalController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\PremiumInterestController;
@@ -8,17 +10,18 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProposalController;
 use App\Http\Controllers\PublicProposalController;
 use App\Http\Controllers\SeoPageController;
+use App\Http\Controllers\StartController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', HomeController::class);
+Route::get('/start', StartController::class)->name('start');
+Route::get('/demo/proposta', DemoProposalController::class)->name('demo.proposal');
 Route::get('/modelo-de-proposta-comercial', [SeoPageController::class, 'modeloDePropostaComercial'])->name('seo.modelo-de-proposta-comercial');
 Route::get('/gerador-de-proposta-comercial', [SeoPageController::class, 'geradorDePropostaComercial'])->name('seo.gerador-de-proposta-comercial');
 Route::get('/proposta-comercial-prestacao-de-servico', [SeoPageController::class, 'propostaComercialPrestacaoDeServico'])->name('seo.proposta-comercial-prestacao-de-servico');
 Route::get('/modelo-de-orcamento-para-cliente', [SeoPageController::class, 'modeloDeOrcamentoParaCliente'])->name('seo.modelo-de-orcamento-para-cliente');
 Route::get('/proposta-comercial-freelancer', [SeoPageController::class, 'propostaComercialFreelancer'])->name('seo.proposta-comercial-freelancer');
 Route::get('/sobre', [SeoPageController::class, 'sobre'])->name('seo.sobre');
-// Route::get('/contato', [ContactController::class, 'create'])->name('contact.create');
-// Route::post('/contato', [ContactController::class, 'store'])->middleware('throttle:5,1')->name('contact.store');
 
 Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('public.proposals.show');
 Route::get('/p/{token}/pdf', [PublicProposalController::class, 'downloadPdf'])->name('public.proposals.pdf');
@@ -41,6 +44,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/metrics', [AdminMetricsController::class, 'index'])->name('metrics.index');
     Route::get('/premium-interests', [PremiumInterestController::class, 'adminIndex'])->name('premium-interests.index');
 });
 

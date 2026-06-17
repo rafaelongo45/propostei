@@ -5,6 +5,7 @@ import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 defineProps({
     proposals: Array,
     planUsage: Object,
+    onboarding: Object,
     stats: Object,
 });
 
@@ -117,6 +118,54 @@ const registerPremiumInterest = () => {
                     </div>
                 </section>
 
+                <section
+                    v-if="proposals.length === 0"
+                    class="mb-6 rounded-lg border border-teal-200 bg-teal-50 p-6 shadow-sm sm:p-8"
+                >
+                    <div class="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-center">
+                        <div>
+                            <p class="text-sm font-semibold uppercase tracking-wide text-teal-700">Primeiros passos</p>
+                            <h3 class="mt-2 text-2xl font-semibold text-gray-950">
+                                Crie sua primeira proposta em poucos minutos
+                            </h3>
+                            <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-700">
+                                Cadastre um cliente, adicione os serviços, informe valores e gere uma proposta profissional por link ou PDF.
+                            </p>
+
+                            <div class="mt-5 flex flex-wrap gap-3">
+                                <Link
+                                    :href="onboarding.clients_count > 0 ? route('proposals.create') : route('clients.create')"
+                                    class="inline-flex justify-center rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
+                                >
+                                    {{ onboarding.clients_count > 0 ? 'Criar minha primeira proposta' : 'Cadastrar meu primeiro cliente' }}
+                                </Link>
+                                <Link
+                                    v-if="onboarding.clients_count > 0"
+                                    :href="route('clients.create')"
+                                    class="inline-flex justify-center rounded-md border border-teal-200 bg-white px-5 py-3 text-sm font-semibold text-teal-800 shadow-sm transition hover:bg-teal-50"
+                                >
+                                    Cadastrar cliente
+                                </Link>
+                            </div>
+                        </div>
+
+                        <ol class="grid gap-3">
+                            <li class="flex gap-3 rounded-md bg-white/80 p-4 text-sm text-gray-700 ring-1 ring-teal-100">
+                                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-teal-700 text-xs font-semibold text-white">1</span>
+                                <span><strong class="text-gray-950">Cadastre o cliente</strong><br />Nome, contato e observações em um só lugar.</span>
+                            </li>
+                            <li class="flex gap-3 rounded-md bg-white/80 p-4 text-sm text-gray-700 ring-1 ring-teal-100">
+                                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-teal-700 text-xs font-semibold text-white">2</span>
+                                <span><strong class="text-gray-950">Adicione os serviços</strong><br />Inclua descrição, quantidade e valor.</span>
+                            </li>
+                            <li class="flex gap-3 rounded-md bg-white/80 p-4 text-sm text-gray-700 ring-1 ring-teal-100">
+                                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-teal-700 text-xs font-semibold text-white">3</span>
+                                <span><strong class="text-gray-950">Envie a proposta</strong><br />Compartilhe por link, PDF ou WhatsApp.</span>
+                            </li>
+                        </ol>
+                    </div>
+                </section>
+
                 <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
                         <div class="text-sm text-gray-500">Total</div>
@@ -141,13 +190,6 @@ const registerPremiumInterest = () => {
                 </div>
 
                 <div class="space-y-4 md:hidden">
-                    <div
-                        v-if="proposals.length === 0"
-                        class="rounded-lg border border-gray-200 bg-white px-4 py-10 text-center text-sm text-gray-500 shadow-sm"
-                    >
-                        Nenhuma proposta criada ainda.
-                    </div>
-
                     <article
                         v-for="proposal in proposals"
                         :key="proposal.id"
@@ -232,7 +274,7 @@ const registerPremiumInterest = () => {
                         <tbody class="divide-y divide-gray-100">
                             <tr v-if="proposals.length === 0">
                                 <td colspan="6" class="px-6 py-10 text-center text-sm text-gray-500">
-                                    Nenhuma proposta criada ainda.
+                                    Sua primeira proposta aparecerá aqui assim que for criada.
                                 </td>
                             </tr>
                             <tr v-for="proposal in proposals" :key="proposal.id" :class="proposal.is_expired ? 'bg-red-50/40' : ''">

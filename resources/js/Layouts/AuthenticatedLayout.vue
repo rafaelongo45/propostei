@@ -59,7 +59,7 @@ const showingNavigationDropdown = ref(false);
                                 </NavLink>
                                 <NavLink
                                     v-if="$page.props.auth.user.is_admin"
-                                    :href="route('admin.premium-interests.index')"
+                                    :href="route('admin.metrics.index')"
                                     :active="route().current('admin.*')"
                                 >
                                     Admin
@@ -185,7 +185,7 @@ const showingNavigationDropdown = ref(false);
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             v-if="$page.props.auth.user.is_admin"
-                            :href="route('admin.premium-interests.index')"
+                            :href="route('admin.metrics.index')"
                             :active="route().current('admin.*')"
                         >
                             Admin

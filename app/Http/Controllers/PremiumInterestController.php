@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PremiumInterest;
+use App\Services\UserEventService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -10,7 +11,7 @@ use Inertia\Response;
 
 class PremiumInterestController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, UserEventService $events): RedirectResponse
     {
         $request->merge([
             'source' => $this->cleanSource($request->input('source')),
@@ -32,6 +33,10 @@ class PremiumInterestController extends Controller
                 'status' => 'interested',
             ],
         );
+        $events->track('premium_interest_clicked', [
+            'source' => $data['source'] ?? 'plans',
+            'current_proposals_count' => $user->activeProposalsCount(),
+        ]);
 
         return back()->with('success', 'Recebemos seu interesse no Premium. Assim que o plano estiver disponível, avisaremos você.');
     }

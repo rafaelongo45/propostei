@@ -1,5 +1,6 @@
 @php
-    $ctaUrl = auth()->check() ? route('proposals.create') : route('register');
+    $marketingQuery = request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'gclid']);
+    $ctaUrl = auth()->check() ? route('proposals.create') : route('start', $marketingQuery);
     $loginUrl = auth()->check() ? route('dashboard') : route('login');
     $seoLinks = [
         'Modelo de proposta comercial' => url('/modelo-de-proposta-comercial'),
@@ -132,8 +133,8 @@
                 <a href="{{ $ctaUrl }}" class="rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold !text-white no-underline shadow-sm transition hover:bg-teal-800">
                     @yield('primaryCta', 'Começar grátis')
                 </a>
-                <a href="{{ url('/gerador-de-proposta-comercial') }}" class="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                    Ver gerador online
+                <a href="{{ route('demo.proposal') }}" class="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                    Ver exemplo de proposta
                 </a>
                     </div>
                 </div>

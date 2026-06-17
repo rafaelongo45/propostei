@@ -63,7 +63,7 @@ const page = usePage();
                         <Link :href="route('clients.show', client.id)" class="break-words text-base font-semibold text-gray-900 hover:text-gray-700">
                             {{ client.name }}
                         </Link>
-                        <div class="mt-1 text-sm text-gray-500">{{ client.company || 'Sem empresa' }}</div>
+                        <div v-if="client.company" class="mt-1 text-sm text-gray-500">{{ client.company }}</div>
 
                         <div class="mt-4 space-y-1 text-sm text-gray-600">
                             <div>{{ client.email || 'Sem e-mail' }}</div>
@@ -120,7 +120,7 @@ const page = usePage();
                                     <Link :href="route('clients.show', client.id)" class="font-medium text-gray-900 hover:text-gray-700">
                                         {{ client.name }}
                                     </Link>
-                                    <div class="text-sm text-gray-500">{{ client.company || 'Sem empresa' }}</div>
+                                    <div v-if="client.company" class="text-sm text-gray-500">{{ client.company }}</div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-gray-600">
                                     <div>{{ client.email || 'Sem e-mail' }}</div>

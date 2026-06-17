@@ -1,5 +1,6 @@
 @php
-    $ctaUrl = auth()->check() ? route('proposals.create') : route('register');
+    $marketingQuery = request()->only(['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'gclid']);
+    $ctaUrl = auth()->check() ? route('proposals.create') : route('start', $marketingQuery);
 @endphp
 
 <div class="my-10 rounded-lg border border-teal-200 bg-teal-50 p-6 shadow-sm">

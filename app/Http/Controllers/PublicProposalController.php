@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Proposal;
 use App\Services\ProposalPdfService;
+use App\Services\UserEventService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -11,12 +12,18 @@ use Inertia\Response;
 
 class PublicProposalController extends Controller
 {
-    public function show(string $token): Response
+    public function show(string $token, UserEventService $events): Response
     {
         $proposal = Proposal::query()
             ->where('public_token', $token)
             ->with(['client', 'items', 'user'])
             ->firstOrFail();
+
+        $events->track('proposal_public_viewed', [
+            'proposal_id' => $proposal->id,
+            'token' => $proposal->public_token,
+            'viewer' => 'public_client',
+        ], $proposal->user);
 
         return Inertia::render('Public/Proposal', [
             'proposal' => [
@@ -55,18 +62,22 @@ class PublicProposalController extends Controller
         ]);
     }
 
-    public function downloadPdf(string $token, ProposalPdfService $pdfService)
+    public function downloadPdf(string $token, ProposalPdfService $pdfService, UserEventService $events)
     {
         $proposal = Proposal::query()
             ->where('public_token', $token)
             ->firstOrFail();
 
         $proposal->recordEvent('pdf_downloaded');
+        $events->track('proposal_pdf_downloaded', [
+            'proposal_id' => $proposal->id,
+            'viewer' => 'public_client',
+        ], $proposal->user);
 
         return $pdfService->download($proposal);
     }
 
-    public function accept(Request $request, string $token): RedirectResponse
+    public function accept(Request $request, string $token, UserEventService $events): RedirectResponse
     {
         $request->merge([
             'accepted_by_name' => $this->cleanText($request->input('accepted_by_name')),
@@ -98,12 +109,16 @@ class PublicProposalController extends Controller
                 'name' => $data['accepted_by_name'],
                 'email' => $data['accepted_by_email'] ?? null,
             ]);
+            $events->track('proposal_accepted', [
+                'proposal_id' => $proposal->id,
+                'client_id' => $proposal->client_id,
+            ], $proposal->user);
         }
 
         return back()->with('success', 'Proposta aceita com sucesso.');
     }
 
-    public function reject(Request $request, string $token): RedirectResponse
+    public function reject(Request $request, string $token, UserEventService $events): RedirectResponse
     {
         $request->merge([
             'rejected_by_name' => $this->cleanText($request->input('rejected_by_name')),
@@ -135,6 +150,10 @@ class PublicProposalController extends Controller
                 'name' => $data['rejected_by_name'],
                 'email' => $data['rejected_by_email'] ?? null,
             ]);
+            $events->track('proposal_rejected', [
+                'proposal_id' => $proposal->id,
+                'client_id' => $proposal->client_id,
+            ], $proposal->user);
         }
 
         return back()->with('success', 'Proposta recusada com sucesso.');

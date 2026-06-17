@@ -125,7 +125,7 @@ const submit = () => {
                             <InputError class="mt-2" :message="form.errors.phone" />
                         </div>
                         <div class="sm:col-span-2">
-                            <InputLabel for="company" value="Empresa" />
+                            <InputLabel for="company" value="Empresa, se houver" />
                             <TextInput id="company" v-model="form.company" class="mt-1 block w-full" maxlength="255" autocomplete="organization" @blur="form.company = cleanOptional(form.company)" />
                             <InputError class="mt-2" :message="form.errors.company" />
                         </div>

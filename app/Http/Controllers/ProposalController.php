@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SendProposalEmailJob;
 use App\Models\Proposal;
 use App\Services\ProposalPdfService;
+use App\Services\UserEventService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,9 @@ class ProposalController extends Controller
         return Inertia::render('Proposals/Index', [
             'proposals' => $proposals,
             'planUsage' => $request->user()->planUsage(),
+            'onboarding' => [
+                'clients_count' => $request->user()->clients()->count(),
+            ],
             'stats' => [
                 'total' => $proposals->count(),
                 'accepted' => $proposals->where('status', 'accepted')->count(),
@@ -63,7 +67,7 @@ class ProposalController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, UserEventService $events): RedirectResponse
     {
         if (! $request->user()->canCreateProposal()) {
             return redirect()->route('plans.index')->with('error', $this->freePlanLimitMessage());
@@ -90,6 +94,13 @@ class ProposalController extends Controller
             return $proposal;
         });
 
+        $proposal->load('items');
+        $events->track('proposal_created', [
+            'proposal_id' => $proposal->id,
+            'client_id' => $proposal->client_id,
+            'total' => $proposal->total,
+        ]);
+
         return redirect()->route('proposals.show', $proposal)->with('success', 'Proposta criada com sucesso.');
     }
 
@@ -106,15 +117,18 @@ class ProposalController extends Controller
         ]);
     }
 
-    public function downloadPdf(Proposal $proposal, ProposalPdfService $pdfService)
+    public function downloadPdf(Proposal $proposal, ProposalPdfService $pdfService, UserEventService $events)
     {
         $this->authorizeProposal($proposal);
         $proposal->recordEvent('pdf_downloaded');
+        $events->track('proposal_pdf_downloaded', [
+            'proposal_id' => $proposal->id,
+        ]);
 
         return $pdfService->download($proposal);
     }
 
-    public function send(Request $request, Proposal $proposal): RedirectResponse
+    public function send(Request $request, Proposal $proposal, UserEventService $events): RedirectResponse
     {
         $this->authorizeProposal($proposal);
 
@@ -144,6 +158,10 @@ class ProposalController extends Controller
             $proposal->markAsSent($data['channel']);
             $proposal->recordEvent('sent_whatsapp', $data['channel']);
         });
+        $events->track('proposal_sent_whatsapp', [
+            'proposal_id' => $proposal->id,
+            'client_id' => $proposal->client_id,
+        ]);
 
         return back()->with('success', 'Envio registrado com sucesso.');
     }

@@ -58,6 +58,11 @@ class User extends Authenticatable
         return $this->hasMany(PremiumInterest::class);
     }
 
+    public function userEvents(): HasMany
+    {
+        return $this->hasMany(UserEvent::class);
+    }
+
     public function isPremium(): bool
     {
         return $this->plan === 'premium'

@@ -30,6 +30,21 @@ const registerPremiumInterest = () => {
         preserveScroll: true,
     });
 };
+
+const startUrl = () => {
+    const allowedParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'gclid'];
+    const currentParams = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams();
+
+    allowedParams.forEach((key) => {
+        const value = currentParams.get(key);
+        if (value) {
+            params.set(key, value);
+        }
+    });
+
+    return `${route('start')}${params.toString() ? `?${params.toString()}` : ''}`;
+};
 </script>
 
 <template>
@@ -57,7 +72,7 @@ const registerPremiumInterest = () => {
                         <Link :href="route('login')" class="text-sm font-semibold text-slate-700 hover:text-slate-950">
                             Entrar
                         </Link>
-                        <Link :href="route('register')" class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
+                        <Link :href="startUrl()" class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800">
                             Criar conta
                         </Link>
                     </template>
@@ -137,7 +152,7 @@ const registerPremiumInterest = () => {
 
                     <Link
                         v-if="!page.props.auth.user"
-                        :href="route('register')"
+                        :href="startUrl()"
                         class="mt-8 inline-flex w-full justify-center rounded-md border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                     >
                         Começar grátis
@@ -178,7 +193,7 @@ const registerPremiumInterest = () => {
 
                     <Link
                         v-if="!page.props.auth.user"
-                        :href="route('register')"
+                        :href="startUrl()"
                         class="mt-8 inline-flex w-full justify-center rounded-md bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
                     >
                         Criar conta para demonstrar interesse

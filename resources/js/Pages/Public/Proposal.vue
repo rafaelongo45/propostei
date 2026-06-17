@@ -131,8 +131,8 @@ const rejectProposal = () => {
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
                             <div class="text-sm font-semibold text-gray-500">Cliente</div>
                             <div class="mt-2 text-base font-semibold text-gray-950">{{ proposal.client.name }}</div>
-                            <div class="text-sm text-gray-600">{{ proposal.client.company }}</div>
-                            <div class="text-sm text-gray-600">{{ proposal.client.email }}</div>
+                            <div v-if="proposal.client.company" class="text-sm text-gray-600">{{ proposal.client.company }}</div>
+                            <div v-if="proposal.client.email" class="text-sm text-gray-600">{{ proposal.client.email }}</div>
                         </div>
 
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">

@@ -9,7 +9,7 @@ defineProps({
 const steps = [
     {
         title: 'Cadastre o cliente',
-        description: 'Guarde nome, empresa, e-mail, telefone e observações importantes em um só lugar.',
+        description: 'Guarde nome, contato e observações importantes em um só lugar.',
     },
     {
         title: 'Monte a proposta',
@@ -50,10 +50,31 @@ const premiumPlanBenefits = [
     'Ideal para freelancers e prestadores',
 ];
 
+const trustBullets = [
+    'Comece grátis com até 5 propostas',
+    'Sem cartão de crédito',
+    'Feito para freelancers, autônomos e prestadores de serviço',
+];
+
 const registerPremiumInterest = () => {
     interestForm.post(route('premium-interest.store'), {
         preserveScroll: true,
     });
+};
+
+const startUrl = () => {
+    const allowedParams = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'gclid'];
+    const currentParams = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams();
+
+    allowedParams.forEach((key) => {
+        const value = currentParams.get(key);
+        if (value) {
+            params.set(key, value);
+        }
+    });
+
+    return `${route('start')}${params.toString() ? `?${params.toString()}` : ''}`;
 };
 </script>
 
@@ -88,7 +109,7 @@ const registerPremiumInterest = () => {
                         </Link>
                         <Link
                             v-if="canRegister"
-                            :href="route('register')"
+                            :href="startUrl()"
                             class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
                         >
                             Criar conta
@@ -121,10 +142,10 @@ const registerPremiumInterest = () => {
                             Propostas comerciais em minutos
                         </p>
                         <h1 class="mt-4 text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl lg:text-6xl">
-                            Envie propostas profissionais e acompanhe o aceite sem perder o histórico.
+                            Crie propostas comerciais profissionais por link ou PDF
                         </h1>
                         <p class="mt-5 text-lg leading-8 text-slate-600">
-                            O propostei ajuda freelancers e pequenos prestadores a cadastrar clientes, montar serviços com valores, compartilhar um link público e registrar quem aceitou cada proposta.
+                            Cadastre clientes, adicione serviços, envie por WhatsApp e receba aceite online.
                         </p>
 
                         <div class="mt-8 flex flex-wrap gap-3">
@@ -137,15 +158,22 @@ const registerPremiumInterest = () => {
                             </Link>
                             <Link
                                 v-else
-                                :href="route('register')"
-                                class="rounded-md bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+                                :href="startUrl()"
+                                class="rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
                             >
-                                Criar minha conta
+                                Criar minha proposta grátis
                             </Link>
-                            <Link :href="route('login')" class="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                                Entrar
+                            <Link :href="route('demo.proposal')" class="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                                Ver exemplo de proposta
                             </Link>
                         </div>
+
+                        <ul class="mt-5 grid gap-2 text-sm text-slate-600 sm:grid-cols-3">
+                            <li v-for="bullet in trustBullets" :key="bullet" class="flex gap-2">
+                                <span class="mt-0.5 text-teal-700">✓</span>
+                                <span>{{ bullet }}</span>
+                            </li>
+                        </ul>
 
                         <dl class="mt-10 grid gap-4 sm:grid-cols-3">
                             <div>
@@ -307,7 +335,7 @@ const registerPremiumInterest = () => {
 
                         <Link
                             v-if="!$page.props.auth.user"
-                            :href="route('register')"
+                            :href="startUrl()"
                             class="mt-8 inline-flex w-full justify-center rounded-md bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
                         >
                             Criar conta para demonstrar interesse
@@ -353,10 +381,16 @@ const registerPremiumInterest = () => {
                             </Link>
                             <Link
                                 v-else
-                                :href="route('register')"
+                                :href="startUrl()"
                                 class="rounded-md bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
                             >
-                                Criar conta
+                                Criar minha proposta grátis
+                            </Link>
+                            <Link
+                                :href="route('demo.proposal')"
+                                class="rounded-md border border-white/30 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+                            >
+                                Ver exemplo
                             </Link>
                         </div>
                     </div>

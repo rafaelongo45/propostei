@@ -65,9 +65,9 @@ const formatMoney = (value) =>
                     <section class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
                         <h3 class="text-base font-semibold text-gray-900">Dados do cliente</h3>
                         <dl class="mt-4 space-y-3 text-sm">
-                            <div>
+                            <div v-if="client.company">
                                 <dt class="text-gray-500">Empresa</dt>
-                                <dd class="font-medium text-gray-900">{{ client.company || 'Não informada' }}</dd>
+                                <dd class="font-medium text-gray-900">{{ client.company }}</dd>
                             </div>
                             <div>
                                 <dt class="text-gray-500">E-mail</dt>

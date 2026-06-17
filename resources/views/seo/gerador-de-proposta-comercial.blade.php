@@ -43,7 +43,7 @@
 
         <h2>Como funciona um gerador de proposta</h2>
         <ol>
-            <li>Você cadastra o cliente com nome, e-mail, empresa e telefone.</li>
+            <li>Você cadastra o cliente com nome, e-mail, telefone e empresa, se houver.</li>
             <li>Cria uma proposta com título, introdução, validade e prazo.</li>
             <li>Adiciona serviços, quantidades e valores unitários.</li>
             <li>Confere subtotal e total final.</li>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Proposal;
+use App\Services\UserEventService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -39,9 +40,12 @@ class ClientController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, UserEventService $events): RedirectResponse
     {
-        $request->user()->clients()->create($this->validatedData($request));
+        $client = $request->user()->clients()->create($this->validatedData($request));
+        $events->track('client_created', [
+            'client_id' => $client->id,
+        ]);
 
         return redirect()->route('clients.index')->with('success', 'Cliente criado com sucesso.');
     }
