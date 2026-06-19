@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Proposal;
 use App\Services\ProposalPdfService;
+use App\Services\ProposalSnapshotService;
 use App\Services\UserEventService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,6 +41,8 @@ class PublicProposalController extends Controller
                 'rejected_by_name' => $proposal->rejected_by_name,
                 'rejected_by_email' => $proposal->rejected_by_email,
                 'rejection_reason' => $proposal->rejection_reason,
+                'canceled_at' => $proposal->canceled_at?->format('d/m/Y H:i'),
+                'canceled_reason' => $proposal->canceled_reason,
                 'client' => [
                     'name' => $proposal->client->name,
                     'company' => $proposal->client->company,
@@ -77,7 +80,7 @@ class PublicProposalController extends Controller
         return $pdfService->download($proposal);
     }
 
-    public function accept(Request $request, string $token, UserEventService $events): RedirectResponse
+    public function accept(Request $request, string $token, UserEventService $events, ProposalSnapshotService $snapshots): RedirectResponse
     {
         $request->merge([
             'accepted_by_name' => $this->cleanText($request->input('accepted_by_name')),
@@ -95,7 +98,7 @@ class PublicProposalController extends Controller
             ->where('public_token', $token)
             ->firstOrFail();
 
-        if (! in_array($proposal->status, ['accepted', 'rejected'], true)) {
+        if (! in_array($proposal->status, ['accepted', 'rejected', 'canceled'], true)) {
             $proposal->update([
                 'status' => 'accepted',
                 'accepted_at' => now(),
@@ -105,13 +108,19 @@ class PublicProposalController extends Controller
                 'acceptance_notes' => $data['acceptance_notes'] ?? null,
             ]);
 
+            $proposal = $snapshots->ensureAcceptedSnapshot($proposal->refresh()->load(['client', 'items', 'user']));
+
             $proposal->recordEvent('accepted', metadata: [
                 'name' => $data['accepted_by_name'],
                 'email' => $data['accepted_by_email'] ?? null,
             ]);
+            $proposal->recordEvent('accepted_snapshot_created');
             $events->track('proposal_accepted', [
                 'proposal_id' => $proposal->id,
                 'client_id' => $proposal->client_id,
+            ], $proposal->user);
+            $events->track('proposal_accepted_snapshot_created', [
+                'proposal_id' => $proposal->id,
             ], $proposal->user);
         }
 
@@ -136,7 +145,7 @@ class PublicProposalController extends Controller
             ->where('public_token', $token)
             ->firstOrFail();
 
-        if (! in_array($proposal->status, ['accepted', 'rejected'], true)) {
+        if (! in_array($proposal->status, ['accepted', 'rejected', 'canceled'], true)) {
             $proposal->update([
                 'status' => 'rejected',
                 'rejected_at' => now(),

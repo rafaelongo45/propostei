@@ -25,7 +25,7 @@ class SendProposalEmailJob implements ShouldQueue
             ->with(['client', 'items', 'user'])
             ->findOrFail($this->proposalId);
 
-        if (! $proposal->client?->email || in_array($proposal->status, ['accepted', 'rejected'], true)) {
+        if (! $proposal->client?->email || in_array($proposal->status, ['accepted', 'rejected', 'canceled'], true)) {
             return;
         }
 

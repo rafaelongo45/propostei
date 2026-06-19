@@ -1,18 +1,24 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     proposal: Object,
 });
 
 const page = usePage();
+const cancelForm = useForm({
+    canceled_reason: '',
+});
+
+const isLocked = () => ['accepted', 'canceled'].includes(props.proposal.status);
 
 const statusLabels = {
     draft: 'Rascunho',
     sent: 'Enviada',
     accepted: 'Aceita',
     rejected: 'Recusada',
+    canceled: 'Cancelada',
 };
 
 const eventLabels = {
@@ -24,7 +30,10 @@ const eventLabels = {
     sent_whatsapp: 'Proposta enviada por WhatsApp',
     link_copied: 'Link público copiado',
     accepted: 'Proposta aceita',
+    accepted_snapshot_created: 'Versão aceita preservada',
+    duplicated: 'Nova versão criada',
     rejected: 'Proposta recusada',
+    canceled: 'Proposta cancelada',
     pdf_downloaded: 'PDF baixado',
 };
 
@@ -80,6 +89,18 @@ const sendWhatsapp = () => {
 const sendEmail = () => {
     registerSend('email');
 };
+
+const cancelProposal = () => {
+    cancelForm.canceled_reason = cancelForm.canceled_reason.trim();
+
+    if (!window.confirm('Confirmar cancelamento desta proposta aceita?')) {
+        return;
+    }
+
+    cancelForm.post(props.proposal.cancel_url, {
+        preserveScroll: true,
+    });
+};
 </script>
 
 <template>
@@ -98,10 +119,20 @@ const sendEmail = () => {
                 </div>
                 <div class="grid grid-cols-1 gap-3 sm:flex">
                     <Link
+                        v-if="!isLocked()"
                         :href="route('proposals.edit', proposal.id)"
                         class="inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                     >
                         Editar
+                    </Link>
+                    <Link
+                        v-else
+                        :href="proposal.duplicate_url"
+                        method="post"
+                        as="button"
+                        class="inline-flex justify-center rounded-md border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-50"
+                    >
+                        Criar nova versão
                     </Link>
                     <a
                         :href="proposal.pdf_url"
@@ -118,6 +149,7 @@ const sendEmail = () => {
                         Enviar por e-mail
                     </button> -->
                     <button
+                        v-if="!['accepted', 'rejected', 'canceled'].includes(proposal.status)"
                         type="button"
                         class="inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
                         @click="sendWhatsapp"
@@ -152,7 +184,69 @@ const sendEmail = () => {
                 </div>
 
                 <div
-                    v-if="proposal.is_expired"
+                    v-if="proposal.status === 'accepted'"
+                    class="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"
+                >
+                    <div class="font-semibold">Proposta aceita e bloqueada para edição.</div>
+                    <p class="mt-1">
+                        O conteúdo aceito foi preservado para histórico. Se o cliente desistiu, registre o cancelamento. Para negociar mudanças, crie uma nova versão.
+                    </p>
+                    <div class="mt-3 grid gap-3 lg:grid-cols-[1fr_220px]">
+                        <form class="rounded-md bg-white/70 p-3" novalidate @submit.prevent="cancelProposal">
+                            <label for="canceled_reason" class="text-sm font-semibold text-emerald-900">Motivo do cancelamento</label>
+                            <textarea
+                                id="canceled_reason"
+                                v-model="cancelForm.canceled_reason"
+                                required
+                                minlength="5"
+                                maxlength="4000"
+                                rows="3"
+                                class="mt-2 block w-full rounded-md border-emerald-200 text-sm shadow-sm focus:border-emerald-700 focus:ring-emerald-700"
+                                placeholder="Ex.: cliente desistiu do projeto."
+                                @blur="cancelForm.canceled_reason = cancelForm.canceled_reason.trim()"
+                            />
+                            <div v-if="cancelForm.errors.canceled_reason" class="mt-2 text-sm text-red-700">
+                                {{ cancelForm.errors.canceled_reason }}
+                            </div>
+                            <button
+                                type="submit"
+                                class="mt-3 inline-flex w-full justify-center rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-100 disabled:opacity-60 sm:w-auto"
+                                :disabled="cancelForm.processing"
+                            >
+                                Cancelar proposta
+                            </button>
+                        </form>
+                        <Link
+                            :href="proposal.duplicate_url"
+                            method="post"
+                            as="button"
+                            class="inline-flex h-fit justify-center rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800"
+                        >
+                            Criar nova versão
+                        </Link>
+                    </div>
+                </div>
+
+                <div
+                    v-else-if="proposal.status === 'canceled'"
+                    class="mb-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+                >
+                    <div class="font-semibold">Proposta cancelada após aceite.</div>
+                    <p class="mt-1">
+                        O aceite continua preservado no histórico, mas esta negociação foi encerrada.
+                    </p>
+                    <Link
+                        :href="proposal.duplicate_url"
+                        method="post"
+                        as="button"
+                        class="mt-3 inline-flex justify-center rounded-md bg-amber-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-800"
+                    >
+                        Criar nova versão
+                    </Link>
+                </div>
+
+                <div
+                    v-else-if="proposal.is_expired"
                     class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
                 >
                     Esta proposta passou da validade em {{ formatDate(proposal.valid_until) }}.
@@ -246,7 +340,7 @@ const sendEmail = () => {
                             </dl>
                         </section>
 
-                        <section v-if="proposal.status === 'accepted'" class="rounded-lg border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
+                        <section v-if="['accepted', 'canceled'].includes(proposal.status)" class="rounded-lg border border-emerald-200 bg-emerald-50 p-6 shadow-sm">
                             <div class="text-sm font-semibold text-emerald-900">Aceite da proposta</div>
                             <dl class="mt-4 space-y-3 text-sm text-emerald-900">
                                 <div>
@@ -264,6 +358,20 @@ const sendEmail = () => {
                                 <div v-if="proposal.acceptance_notes">
                                     <dt class="text-emerald-700">Observações do cliente</dt>
                                     <dd class="whitespace-pre-line font-medium">{{ proposal.acceptance_notes }}</dd>
+                                </div>
+                            </dl>
+                        </section>
+
+                        <section v-if="proposal.status === 'canceled'" class="rounded-lg border border-amber-200 bg-amber-50 p-6 shadow-sm">
+                            <div class="text-sm font-semibold text-amber-900">Cancelamento</div>
+                            <dl class="mt-4 space-y-3 text-sm text-amber-900">
+                                <div>
+                                    <dt class="text-amber-700">Cancelada em</dt>
+                                    <dd class="font-medium">{{ proposal.canceled_at || 'Não registrado' }}</dd>
+                                </div>
+                                <div v-if="proposal.canceled_reason">
+                                    <dt class="text-amber-700">Motivo</dt>
+                                    <dd class="whitespace-pre-line font-medium">{{ proposal.canceled_reason }}</dd>
                                 </div>
                             </dl>
                         </section>

@@ -23,6 +23,7 @@ const statusLabels = {
     sent: 'Enviada',
     accepted: 'Aceita',
     rejected: 'Recusada',
+    canceled: 'Cancelada',
 };
 
 const formatMoney = (value) =>
@@ -200,7 +201,7 @@ const rejectProposal = () => {
                 </div>
 
                 <section class="border-t border-gray-200 bg-gray-50 p-5 sm:p-8">
-                    <div v-if="!['accepted', 'rejected'].includes(proposal.status)">
+                    <div v-if="!['accepted', 'rejected', 'canceled'].includes(proposal.status)">
                         <div class="mb-5">
                             <h2 class="text-lg font-semibold text-gray-950">Decisão sobre a proposta</h2>
                             <p class="mt-1 text-sm text-gray-600">
@@ -371,6 +372,9 @@ const rejectProposal = () => {
                         class="rounded-lg border border-emerald-200 bg-emerald-50 p-5 text-emerald-900"
                     >
                         <div class="text-base font-semibold">Proposta aceita</div>
+                        <p class="mt-1 text-sm text-emerald-800">
+                            Esta proposta já foi aceita e a versão aprovada foi preservada no momento do aceite.
+                        </p>
                         <dl class="mt-3 grid gap-3 text-sm sm:grid-cols-3">
                             <div>
                                 <dt class="text-emerald-700">Responsável</dt>
@@ -400,7 +404,7 @@ const rejectProposal = () => {
                     </div>
 
                     <div
-                        v-else
+                        v-else-if="proposal.status === 'rejected'"
                         class="rounded-lg border border-rose-200 bg-rose-50 p-5 text-rose-900"
                     >
                         <div class="text-base font-semibold">Proposta recusada</div>
@@ -422,6 +426,32 @@ const rejectProposal = () => {
                             <div class="text-sm font-semibold text-rose-800">Motivo da recusa</div>
                             <p class="mt-2 whitespace-pre-line text-sm text-rose-900">
                                 {{ proposal.rejection_reason }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div
+                        v-else
+                        class="rounded-lg border border-amber-200 bg-amber-50 p-5 text-amber-900"
+                    >
+                        <div class="text-base font-semibold">Proposta cancelada</div>
+                        <p class="mt-1 text-sm text-amber-800">
+                            Esta proposta havia sido aceita, mas foi cancelada posteriormente.
+                        </p>
+                        <dl class="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+                            <div v-if="proposal.canceled_at">
+                                <dt class="text-amber-700">Data do cancelamento</dt>
+                                <dd class="font-medium">{{ proposal.canceled_at }}</dd>
+                            </div>
+                            <div v-if="proposal.accepted_at">
+                                <dt class="text-amber-700">Aceita em</dt>
+                                <dd class="font-medium">{{ proposal.accepted_at }}</dd>
+                            </div>
+                        </dl>
+                        <div v-if="proposal.canceled_reason" class="mt-4 rounded-md bg-white/70 p-4">
+                            <div class="text-sm font-semibold text-amber-800">Motivo do cancelamento</div>
+                            <p class="mt-2 whitespace-pre-line text-sm text-amber-900">
+                                {{ proposal.canceled_reason }}
                             </p>
                         </div>
                     </div>

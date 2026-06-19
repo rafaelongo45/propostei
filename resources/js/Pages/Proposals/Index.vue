@@ -19,6 +19,7 @@ const statusLabels = {
     sent: 'Enviada',
     accepted: 'Aceita',
     rejected: 'Recusada',
+    canceled: 'Cancelada',
 };
 
 const statusClasses = {
@@ -26,6 +27,7 @@ const statusClasses = {
     sent: 'bg-blue-50 text-blue-700 ring-blue-200',
     accepted: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
     rejected: 'bg-rose-50 text-rose-700 ring-rose-200',
+    canceled: 'bg-amber-50 text-amber-700 ring-amber-200',
 };
 
 const formatMoney = (value) =>
@@ -166,7 +168,7 @@ const registerPremiumInterest = () => {
                     </div>
                 </section>
 
-                <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
                     <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
                         <div class="text-sm text-gray-500">Total</div>
                         <div class="mt-2 text-2xl font-semibold text-gray-900">{{ stats.total }}</div>
@@ -186,6 +188,10 @@ const registerPremiumInterest = () => {
                     <div class="rounded-lg border border-red-200 bg-red-50 p-5 shadow-sm">
                         <div class="text-sm text-red-700">Vencidas</div>
                         <div class="mt-2 text-2xl font-semibold text-red-700">{{ stats.expired }}</div>
+                    </div>
+                    <div class="rounded-lg border border-amber-200 bg-amber-50 p-5 shadow-sm">
+                        <div class="text-sm text-amber-700">Canceladas</div>
+                        <div class="mt-2 text-2xl font-semibold text-amber-700">{{ stats.canceled }}</div>
                     </div>
                 </div>
 
@@ -240,13 +246,27 @@ const registerPremiumInterest = () => {
                             <Link :href="route('proposals.show', proposal.id)" class="inline-flex justify-center rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
                                 Ver
                             </Link>
-                            <Link :href="route('proposals.edit', proposal.id)" class="inline-flex justify-center rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700">
+                            <Link
+                                v-if="!['accepted', 'canceled'].includes(proposal.status)"
+                                :href="route('proposals.edit', proposal.id)"
+                                class="inline-flex justify-center rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700"
+                            >
                                 {{ proposal.is_expired ? 'Atualizar' : 'Editar' }}
+                            </Link>
+                            <Link
+                                v-else
+                                :href="proposal.duplicate_url"
+                                method="post"
+                                as="button"
+                                class="inline-flex justify-center rounded-md border border-emerald-300 px-3 py-2 text-sm font-semibold text-emerald-800"
+                            >
+                                Nova versão
                             </Link>
                             <a :href="proposal.public_url" target="_blank" class="inline-flex justify-center rounded-md border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700">
                                 Público
                             </a>
                             <Link
+                                v-if="!['accepted', 'canceled'].includes(proposal.status)"
                                 :href="route('proposals.destroy', proposal.id)"
                                 method="delete"
                                 as="button"
@@ -306,13 +326,27 @@ const registerPremiumInterest = () => {
                                     <Link :href="route('proposals.show', proposal.id)" class="font-medium text-gray-700 hover:text-gray-950">
                                         Ver
                                     </Link>
-                                    <Link :href="route('proposals.edit', proposal.id)" class="font-medium text-gray-700 hover:text-gray-950">
+                                    <Link
+                                        v-if="!['accepted', 'canceled'].includes(proposal.status)"
+                                        :href="route('proposals.edit', proposal.id)"
+                                        class="font-medium text-gray-700 hover:text-gray-950"
+                                    >
                                         {{ proposal.is_expired ? 'Atualizar' : 'Editar' }}
+                                    </Link>
+                                    <Link
+                                        v-else
+                                        :href="proposal.duplicate_url"
+                                        method="post"
+                                        as="button"
+                                        class="font-medium text-emerald-700 hover:text-emerald-900"
+                                    >
+                                        Nova versão
                                     </Link>
                                     <a :href="proposal.public_url" target="_blank" class="font-medium text-blue-700 hover:text-blue-900">
                                         Público
                                     </a>
                                     <Link
+                                        v-if="!['accepted', 'canceled'].includes(proposal.status)"
                                         :href="route('proposals.destroy', proposal.id)"
                                         method="delete"
                                         as="button"

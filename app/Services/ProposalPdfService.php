@@ -9,9 +9,28 @@ use Illuminate\Support\Str;
 
 class ProposalPdfService
 {
+    public function __construct(private readonly ProposalSnapshotService $snapshots) {}
+
     public function download(Proposal $proposal)
     {
         $proposal->loadMissing(['client', 'items', 'user']);
+
+        if ($proposal->status === 'accepted') {
+            $proposal = $this->snapshots->ensureAcceptedSnapshot($proposal, late: true);
+        }
+
+        if ($proposal->accepted_snapshot !== null) {
+            return Pdf::loadView('pdfs.proposal-accepted', [
+                'snapshot' => $proposal->accepted_snapshot,
+                'cancellation' => $proposal->status === 'canceled' ? [
+                    'canceled_at' => $proposal->canceled_at?->toIso8601String(),
+                    'canceled_reason' => $proposal->canceled_reason,
+                ] : null,
+                'companyLogoPath' => $this->snapshots->logoPath($proposal->accepted_snapshot),
+            ])
+                ->setPaper('a4')
+                ->download($this->filename($proposal));
+        }
 
         return Pdf::loadView('pdfs.proposal', [
             'proposal' => $proposal,
@@ -21,6 +40,7 @@ class ProposalPdfService
                 'sent' => 'Enviada',
                 'accepted' => 'Aceita',
                 'rejected' => 'Recusada',
+                'canceled' => 'Cancelada',
             ],
         ])
             ->setPaper('a4')

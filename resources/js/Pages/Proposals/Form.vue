@@ -88,6 +88,7 @@ const statusLabels = {
     sent: 'Enviada',
     accepted: 'Aceita',
     rejected: 'Recusada',
+    canceled: 'Cancelada',
 };
 
 const formatMoney = (value) =>

@@ -21,7 +21,7 @@ const showingNavigationDropdown = ref(false);
                         <div class="flex">
                             <!-- Logo -->
                             <div class="flex shrink-0 items-center">
-                                <Link :href="route('dashboard')" class="flex items-center gap-2">
+                                <Link href="/" class="flex items-center gap-2">
                                     <span class="block h-10 w-10 overflow-hidden rounded-md shadow-sm">
                                         <img
                                             src="/propostei-logo.png"
@@ -40,8 +40,8 @@ const showingNavigationDropdown = ref(false);
                                 class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex"
                             >
                                 <NavLink
-                                    :href="route('dashboard')"
-                                    :active="route().current('dashboard') || route().current('proposals.*')"
+                                    :href="route('proposals.index')"
+                                    :active="route().current('proposals.*')"
                                 >
                                     Propostas
                                 </NavLink>
@@ -166,8 +166,8 @@ const showingNavigationDropdown = ref(false);
                 >
                     <div class="space-y-1 pb-3 pt-2">
                         <ResponsiveNavLink
-                            :href="route('dashboard')"
-                            :active="route().current('dashboard') || route().current('proposals.*')"
+                            :href="route('proposals.index')"
+                            :active="route().current('proposals.*')"
                         >
                             Propostas
                         </ResponsiveNavLink>

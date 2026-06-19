@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\SendProposalEmailJob;
 use App\Models\Proposal;
 use App\Services\ProposalPdfService;
+use App\Services\ProposalSnapshotService;
 use App\Services\UserEventService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,6 +39,7 @@ class ProposalController extends Controller
                 'sent' => $proposals->where('status', 'sent')->count(),
                 'draft' => $proposals->where('status', 'draft')->count(),
                 'expired' => $proposals->where('is_expired', true)->count(),
+                'canceled' => $proposals->where('status', 'canceled')->count(),
             ],
         ]);
     }
@@ -60,14 +62,14 @@ class ProposalController extends Controller
         return Inertia::render('Proposals/Form', [
             'proposal' => null,
             'clients' => $clients,
-            'statuses' => Proposal::STATUSES,
+            'statuses' => $this->editableStatuses(),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, UserEventService $events): RedirectResponse
+    public function store(Request $request, UserEventService $events, ProposalSnapshotService $snapshots): RedirectResponse
     {
         if (! $request->user()->canCreateProposal()) {
             return redirect()->route('plans.index')->with('error', $this->freePlanLimitMessage());
@@ -93,6 +95,14 @@ class ProposalController extends Controller
 
             return $proposal;
         });
+
+        if ($proposal->status === 'accepted') {
+            $proposal = $snapshots->ensureAcceptedSnapshot($proposal->load(['client', 'items', 'user']));
+            $proposal->recordEvent('accepted_snapshot_created');
+            $events->track('proposal_accepted_snapshot_created', [
+                'proposal_id' => $proposal->id,
+            ]);
+        }
 
         $proposal->load('items');
         $events->track('proposal_created', [
@@ -141,8 +151,8 @@ class ProposalController extends Controller
                 return back()->with('error', 'Cadastre um e-mail para o cliente antes de enviar a proposta.');
             }
 
-            if (in_array($proposal->status, ['accepted', 'rejected'], true)) {
-                return back()->with('error', 'Propostas aceitas ou recusadas não podem ser reenviadas por este fluxo.');
+            if (in_array($proposal->status, ['accepted', 'rejected', 'canceled'], true)) {
+                return back()->with('error', 'Propostas aceitas, recusadas ou canceladas não podem ser reenviadas por este fluxo.');
             }
 
             $proposal->recordEvent('email_queued', 'email', [
@@ -177,24 +187,34 @@ class ProposalController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Request $request, Proposal $proposal): Response
+    public function edit(Request $request, Proposal $proposal): Response|RedirectResponse
     {
         $this->authorizeProposal($proposal);
+
+        if ($this->isLockedProposal($proposal)) {
+            return redirect()->route('proposals.show', $proposal)->with('error', $this->acceptedLockedMessage());
+        }
+
         $proposal->load('items');
 
         return Inertia::render('Proposals/Form', [
             'proposal' => $this->proposalFormPayload($proposal),
             'clients' => $this->clientOptions($request),
-            'statuses' => Proposal::STATUSES,
+            'statuses' => $this->editableStatuses(),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Proposal $proposal): RedirectResponse
+    public function update(Request $request, Proposal $proposal, ProposalSnapshotService $snapshots, UserEventService $events): RedirectResponse
     {
         $this->authorizeProposal($proposal);
+
+        if ($this->isLockedProposal($proposal)) {
+            return redirect()->route('proposals.show', $proposal)->with('error', $this->acceptedLockedMessage());
+        }
+
         $data = $this->validatedData($request);
 
         DB::transaction(function () use ($request, $proposal, $data): void {
@@ -214,6 +234,14 @@ class ProposalController extends Controller
             $proposal->recordEvent('updated');
         });
 
+        if ($proposal->refresh()->status === 'accepted') {
+            $proposal = $snapshots->ensureAcceptedSnapshot($proposal->load(['client', 'items', 'user']));
+            $proposal->recordEvent('accepted_snapshot_created');
+            $events->track('proposal_accepted_snapshot_created', [
+                'proposal_id' => $proposal->id,
+            ]);
+        }
+
         return redirect()->route('proposals.show', $proposal)->with('success', 'Proposta atualizada com sucesso.');
     }
 
@@ -223,9 +251,99 @@ class ProposalController extends Controller
     public function destroy(Proposal $proposal): RedirectResponse
     {
         $this->authorizeProposal($proposal);
+
+        if ($this->isLockedProposal($proposal)) {
+            return redirect()->route('proposals.show', $proposal)->with('error', $this->acceptedLockedMessage());
+        }
+
         $proposal->delete();
 
         return redirect()->route('proposals.index')->with('success', 'Proposta removida com sucesso.');
+    }
+
+    public function duplicate(Request $request, Proposal $proposal, UserEventService $events): RedirectResponse
+    {
+        $this->authorizeProposal($proposal);
+
+        if (! $request->user()->canCreateProposal()) {
+            return redirect()->route('plans.index')->with('error', $this->freePlanLimitMessage());
+        }
+
+        $proposal->load('items');
+
+        $copy = DB::transaction(function () use ($request, $proposal): Proposal {
+            $copy = $request->user()->proposals()->create([
+                'client_id' => $proposal->client_id,
+                'title' => $proposal->title.' - nova versão',
+                'introduction' => $proposal->introduction,
+                'valid_until' => null,
+                'delivery_estimate' => $proposal->delivery_estimate,
+                'status' => 'draft',
+                'internal_notes' => $proposal->internal_notes,
+                'manual_discount' => $proposal->manual_discount,
+            ]);
+
+            foreach ($proposal->items as $index => $item) {
+                $copy->items()->create([
+                    'description' => $item->description,
+                    'quantity' => $item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'sort_order' => $index + 1,
+                ]);
+            }
+
+            $copy->recordEvent('duplicated', metadata: [
+                'original_proposal_id' => $proposal->id,
+            ]);
+
+            return $copy;
+        });
+
+        $events->track('proposal_duplicated', [
+            'proposal_id' => $copy->id,
+            'original_proposal_id' => $proposal->id,
+            'client_id' => $copy->client_id,
+        ]);
+
+        return redirect()->route('proposals.show', $copy)->with('success', 'Nova versão criada como rascunho.');
+    }
+
+    public function cancel(Request $request, Proposal $proposal, UserEventService $events, ProposalSnapshotService $snapshots): RedirectResponse
+    {
+        $this->authorizeProposal($proposal);
+
+        if ($proposal->status !== 'accepted') {
+            return redirect()->route('proposals.show', $proposal)->with('error', 'Somente propostas aceitas podem ser canceladas.');
+        }
+
+        $request->merge([
+            'canceled_reason' => $this->cleanText($request->input('canceled_reason')),
+        ]);
+
+        $data = $request->validate([
+            'canceled_reason' => ['required', 'string', 'min:5', 'max:4000'],
+        ]);
+
+        DB::transaction(function () use ($proposal, $data, $snapshots): void {
+            $snapshots->ensureAcceptedSnapshot($proposal->load(['client', 'items', 'user']));
+
+            $proposal->update([
+                'status' => 'canceled',
+                'canceled_at' => now(),
+                'canceled_reason' => $data['canceled_reason'],
+            ]);
+
+            $proposal->recordEvent('canceled', metadata: [
+                'message' => $data['canceled_reason'],
+            ]);
+        });
+
+        $events->track('proposal_canceled', [
+            'proposal_id' => $proposal->id,
+            'client_id' => $proposal->client_id,
+        ]);
+
+        return redirect()->route('proposals.show', $proposal)->with('success', 'Proposta cancelada com sucesso.');
     }
 
     private function validatedData(Request $request): array
@@ -241,7 +359,7 @@ class ProposalController extends Controller
             'introduction' => ['nullable', 'string', 'max:4000'],
             'valid_until' => ['nullable', 'date', 'after_or_equal:today'],
             'delivery_estimate' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', Rule::in(Proposal::STATUSES)],
+            'status' => ['required', Rule::in($this->editableStatuses())],
             'internal_notes' => ['nullable', 'string', 'max:4000'],
             'manual_discount' => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
             'items' => ['required', 'array', 'min:1'],
@@ -336,6 +454,21 @@ class ProposalController extends Controller
         return 'Você atingiu o limite de 5 propostas do plano grátis. Registre interesse no Premium por R$ 19,90/mês para criar propostas ilimitadas.';
     }
 
+    private function acceptedLockedMessage(): string
+    {
+        return 'Propostas aceitas ou canceladas ficam bloqueadas para preservar o histórico. Crie uma nova versão para negociar alterações.';
+    }
+
+    private function editableStatuses(): array
+    {
+        return ['draft', 'sent', 'accepted', 'rejected'];
+    }
+
+    private function isLockedProposal(Proposal $proposal): bool
+    {
+        return in_array($proposal->status, ['accepted', 'canceled'], true);
+    }
+
     private function proposalFormPayload(Proposal $proposal): array
     {
         return [
@@ -361,7 +494,7 @@ class ProposalController extends Controller
     {
         $isExpired = $proposal->valid_until !== null
             && $proposal->valid_until->lt(today())
-            && ! in_array($proposal->status, ['accepted', 'rejected'], true);
+            && ! in_array($proposal->status, ['accepted', 'rejected', 'canceled'], true);
 
         return [
             'id' => $proposal->id,
@@ -383,6 +516,8 @@ class ProposalController extends Controller
             'rejected_by_name' => $proposal->rejected_by_name,
             'rejected_by_email' => $proposal->rejected_by_email,
             'rejection_reason' => $proposal->rejection_reason,
+            'canceled_at' => $proposal->canceled_at?->format('d/m/Y H:i'),
+            'canceled_reason' => $proposal->canceled_reason,
             'internal_notes' => $proposal->internal_notes,
             'manual_discount' => (float) $proposal->manual_discount,
             'public_token' => $proposal->public_token,
@@ -390,6 +525,8 @@ class ProposalController extends Controller
             'pdf_url' => route('proposals.pdf', $proposal),
             'send_url' => route('proposals.send', $proposal),
             'link_copied_url' => route('proposals.link-copied', $proposal),
+            'duplicate_url' => route('proposals.duplicate', $proposal),
+            'cancel_url' => route('proposals.cancel', $proposal),
             'client' => $proposal->client,
             'items' => $proposal->items->map(fn ($item) => [
                 'id' => $item->id,

@@ -24,7 +24,10 @@ class AdminMetricsController extends Controller
         'proposal_pdf_downloaded' => 'PDFs baixados',
         'proposal_public_viewed' => 'Visualizações públicas',
         'proposal_accepted' => 'Propostas aceitas',
+        'proposal_accepted_snapshot_created' => 'Snapshots de aceite',
+        'proposal_duplicated' => 'Propostas duplicadas',
         'proposal_rejected' => 'Propostas recusadas',
+        'proposal_canceled' => 'Propostas canceladas',
         'premium_interest_clicked' => 'Interesses Premium',
     ];
 

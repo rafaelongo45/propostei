@@ -30,12 +30,14 @@ Route::post('/p/{token}/reject', [PublicProposalController::class, 'reject'])->n
 Route::get('/plans', [PlanController::class, 'index'])->name('plans.index');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', [ProposalController::class, 'index'])->name('dashboard');
+    Route::redirect('/dashboard', '/proposals')->name('dashboard');
     Route::post('/premium-interest', [PremiumInterestController::class, 'store'])->name('premium-interest.store');
     Route::resource('clients', ClientController::class);
     Route::get('/proposals/{proposal}/pdf', [ProposalController::class, 'downloadPdf'])->name('proposals.pdf');
     Route::post('/proposals/{proposal}/send', [ProposalController::class, 'send'])->name('proposals.send');
     Route::post('/proposals/{proposal}/link-copied', [ProposalController::class, 'linkCopied'])->name('proposals.link-copied');
+    Route::post('/proposals/{proposal}/duplicate', [ProposalController::class, 'duplicate'])->name('proposals.duplicate');
+    Route::post('/proposals/{proposal}/cancel', [ProposalController::class, 'cancel'])->name('proposals.cancel');
     Route::resource('proposals', ProposalController::class);
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

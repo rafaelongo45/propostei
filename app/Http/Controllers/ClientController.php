@@ -71,7 +71,7 @@ class ClientController extends Controller
             'proposals' => $client->proposals->map(function (Proposal $proposal) {
                 $isExpired = $proposal->valid_until !== null
                     && $proposal->valid_until->lt(today())
-                    && ! in_array($proposal->status, ['accepted', 'rejected'], true);
+                    && ! in_array($proposal->status, ['accepted', 'rejected', 'canceled'], true);
 
                 return [
                     'id' => $proposal->id,
@@ -83,6 +83,7 @@ class ClientController extends Controller
                     'subtotal' => $proposal->subtotal,
                     'total' => $proposal->total,
                     'public_url' => route('public.proposals.show', $proposal->public_token),
+                    'duplicate_url' => route('proposals.duplicate', $proposal),
                     'created_at' => $proposal->created_at?->format('d/m/Y'),
                 ];
             }),

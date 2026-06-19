@@ -10,6 +10,16 @@ const formatMoney = (value) =>
         style: 'currency',
         currency: 'BRL',
     }).format(value || 0);
+
+const formatDate = (value) => {
+    if (!value) {
+        return 'Não informada';
+    }
+
+    const [year, month, day] = String(value).split('-');
+
+    return day && month && year ? `${day}/${month}/${year}` : value;
+};
 </script>
 
 <template>
@@ -100,14 +110,16 @@ const formatMoney = (value) =>
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
                             <div class="text-sm font-semibold text-gray-500">Cliente</div>
                             <div class="mt-2 text-base font-semibold text-gray-950">{{ proposal.client.name }}</div>
-                            <div class="text-sm text-gray-600">{{ proposal.client.email }}</div>
+                            <div v-if="proposal.client.company" class="text-sm text-gray-600">{{ proposal.client.company }}</div>
+                            <div v-if="proposal.client.email" class="text-sm text-gray-600">{{ proposal.client.email }}</div>
+                            <div v-if="proposal.client.phone" class="text-sm text-gray-600">{{ proposal.client.phone }}</div>
                         </div>
 
                         <div class="rounded-lg border border-gray-200 bg-gray-50 p-5">
                             <dl class="space-y-3 text-sm">
                                 <div class="flex justify-between gap-3">
                                     <dt class="text-gray-500">Validade</dt>
-                                    <dd class="font-medium text-gray-900">{{ proposal.validity }}</dd>
+                                    <dd class="font-medium text-gray-900">{{ formatDate(proposal.valid_until) }}</dd>
                                 </div>
                                 <div class="flex justify-between gap-3">
                                     <dt class="text-gray-500">Prazo</dt>
@@ -117,11 +129,34 @@ const formatMoney = (value) =>
                                     <dt class="text-gray-500">Subtotal</dt>
                                     <dd class="font-medium text-gray-900">{{ formatMoney(proposal.subtotal) }}</dd>
                                 </div>
+                                <div v-if="proposal.manual_discount > 0" class="flex justify-between gap-3">
+                                    <dt class="text-gray-500">Desconto</dt>
+                                    <dd class="font-medium text-gray-900">{{ formatMoney(proposal.manual_discount) }}</dd>
+                                </div>
                                 <div class="flex justify-between gap-3 border-t border-gray-200 pt-3 text-lg">
                                     <dt class="font-semibold text-gray-950">Total</dt>
                                     <dd class="font-semibold text-gray-950">{{ formatMoney(proposal.total) }}</dd>
                                 </div>
                             </dl>
+                        </div>
+
+                        <div v-if="proposal.payment" class="rounded-lg border border-emerald-200 bg-emerald-50 p-5">
+                            <div class="text-sm font-semibold text-emerald-900">Pagamento</div>
+                            <dl class="mt-3 space-y-3 text-sm">
+                                <div v-if="proposal.payment.recipient_name">
+                                    <dt class="text-emerald-700">Favorecido</dt>
+                                    <dd class="break-words font-medium text-emerald-950">{{ proposal.payment.recipient_name }}</dd>
+                                </div>
+                                <div v-if="proposal.payment.pix_key">
+                                    <dt class="text-emerald-700">
+                                        Chave Pix{{ proposal.payment.pix_key_type_label ? ` (${proposal.payment.pix_key_type_label})` : '' }}
+                                    </dt>
+                                    <dd class="break-words font-medium text-emerald-950">{{ proposal.payment.pix_key }}</dd>
+                                </div>
+                            </dl>
+                            <p v-if="proposal.payment.instructions" class="mt-4 whitespace-pre-line rounded-md bg-white/70 p-3 text-sm text-emerald-950">
+                                {{ proposal.payment.instructions }}
+                            </p>
                         </div>
                     </aside>
                 </div>
