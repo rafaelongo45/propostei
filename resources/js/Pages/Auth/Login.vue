@@ -132,5 +132,15 @@ const submit = () => {
                 </PrimaryButton>
             </div>
         </form>
+
+        <div class="mt-6 border-t border-gray-200 pt-5 text-center">
+            <p class="text-sm text-gray-600">Ainda não tem uma conta?</p>
+            <Link
+                :href="route('register')"
+                class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+            >
+                Criar conta grátis
+            </Link>
+        </div>
     </GuestLayout>
 </template>

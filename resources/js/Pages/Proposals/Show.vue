@@ -86,9 +86,7 @@ const sendWhatsapp = () => {
     registerSend('whatsapp');
 };
 
-const sendEmail = () => {
-    registerSend('email');
-};
+// Envio direto por e-mail será reativado quando o fluxo estiver pronto para uso público.
 
 const cancelProposal = () => {
     cancelForm.canceled_reason = cancelForm.canceled_reason.trim();
@@ -140,14 +138,6 @@ const cancelProposal = () => {
                     >
                         Baixar PDF
                     </a>
-                    <!-- <button
-                        type="button"
-                        class="inline-flex justify-center rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
-                        @click="sendEmail"
-                        hidden
-                    >
-                        Enviar por e-mail
-                    </button> -->
                     <button
                         v-if="!['accepted', 'rejected', 'canceled'].includes(proposal.status)"
                         type="button"

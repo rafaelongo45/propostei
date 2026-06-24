@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\GuestProposalService;
 use App\Services\UserEventService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class GoogleAuthController extends Controller
             ->redirect();
     }
 
-    public function callback(UserEventService $events): RedirectResponse
+    public function callback(UserEventService $events, GuestProposalService $guests): RedirectResponse
     {
         try {
             $googleUser = Socialite::driver('google')->user();
@@ -86,6 +87,16 @@ class GoogleAuthController extends Controller
                     ...$metadata,
                     'auth_provider' => 'google',
                 ], $user);
+            }
+
+            if ($proposal = $guests->claimPending($user)) {
+                $events->track('guest_proposal_claimed', [
+                    'proposal_id' => $proposal->id,
+                    'auth_provider' => 'google',
+                ], $user);
+
+                return redirect()->route('proposals.show', $proposal)
+                    ->with('success', 'Sua proposta foi salva na sua conta.');
             }
 
             return redirect()->intended(route('dashboard', absolute: false));

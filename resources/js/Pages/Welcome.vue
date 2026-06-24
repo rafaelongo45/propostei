@@ -8,20 +8,16 @@ defineProps({
 
 const steps = [
     {
-        title: 'Cadastre o cliente',
-        description: 'Guarde nome, contato e observações importantes em um só lugar.',
+        title: 'Crie sua proposta grátis',
+        description: 'Preencha cliente, serviços, valores e condições sem precisar criar conta.',
     },
     {
-        title: 'Monte a proposta',
-        description: 'Adicione serviços, quantidades, valores unitários, validade e prazo de entrega.',
+        title: 'Veja o resultado na hora',
+        description: 'Confira a proposta pronta antes de decidir se quer salvar ou enviar.',
     },
     {
-        title: 'Envie o link',
-        description: 'Compartilhe uma página pública profissional, pronta para o cliente avaliar.',
-    },
-    {
-        title: 'Acompanhe o aceite',
-        description: 'Veja status, data, responsável e histórico da proposta no painel.',
+        title: 'Cadastre-se para baixar ou enviar',
+        description: 'Crie sua conta grátis somente quando quiser gerar o PDF, salvar ou enviar ao cliente.',
     },
 ];
 
@@ -51,9 +47,9 @@ const premiumPlanBenefits = [
 ];
 
 const trustBullets = [
-    'Comece grátis com até 5 propostas',
+    'Grátis para começar',
     'Sem cartão de crédito',
-    'Feito para freelancers, autônomos e prestadores de serviço',
+    'Cadastro só na hora de baixar ou enviar',
 ];
 
 const registerPremiumInterest = () => {
@@ -74,7 +70,7 @@ const startUrl = () => {
         }
     });
 
-    return `${route('start')}${params.toString() ? `?${params.toString()}` : ''}`;
+    return `${route('guest.proposals.create')}${params.toString() ? `?${params.toString()}` : ''}`;
 };
 </script>
 
@@ -84,7 +80,7 @@ const startUrl = () => {
     <div class="min-h-screen bg-slate-50 text-slate-950">
         <header class="sticky top-0 z-20 border-b border-slate-200 bg-white/95 backdrop-blur">
             <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-                <Link :href="route('dashboard')" class="flex items-center gap-3">
+                <Link href="/" class="flex items-center gap-3">
                     <span class="block h-12 w-12 overflow-hidden rounded-md shadow-sm">
                         <img
                             src="/propostei-logo.png"
@@ -112,7 +108,7 @@ const startUrl = () => {
                             :href="startUrl()"
                             class="rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
                         >
-                            Criar conta
+                            Criar proposta grátis
                         </Link>
                     </template>
                 </nav>
@@ -139,13 +135,13 @@ const startUrl = () => {
                 <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[1fr_360px] lg:px-8 lg:py-20">
                     <div class="max-w-3xl">
                         <p class="text-sm font-semibold uppercase tracking-wide text-teal-700">
-                            Propostas comerciais em minutos
+                            Comece sem cadastro
                         </p>
                         <h1 class="mt-4 text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl lg:text-6xl">
-                            Crie propostas comerciais profissionais por link ou PDF
+                            Crie uma proposta comercial profissional antes mesmo de se cadastrar
                         </h1>
                         <p class="mt-5 text-lg leading-8 text-slate-600">
-                            Cadastre clientes, adicione serviços, envie por WhatsApp e receba aceite online.
+                            Monte sua proposta grátis, veja como ela vai ficar e só crie sua conta quando quiser baixar o PDF ou enviar ao cliente.
                         </p>
 
                         <div class="mt-8 flex flex-wrap gap-3">
@@ -161,7 +157,7 @@ const startUrl = () => {
                                 :href="startUrl()"
                                 class="rounded-md bg-teal-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-800"
                             >
-                                Criar minha proposta grátis
+                                Criar proposta grátis
                             </Link>
                             <Link :href="route('demo.proposal')" class="rounded-md border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                                 Ver exemplo de proposta
@@ -185,8 +181,8 @@ const startUrl = () => {
                                 <dd class="mt-1 text-2xl font-semibold text-slate-950">1 clique</dd>
                             </div>
                             <div>
-                                <dt class="text-sm text-slate-500">Status</dt>
-                                <dd class="mt-1 text-2xl font-semibold text-slate-950">4 etapas</dd>
+                                <dt class="text-sm text-slate-500">Cadastro</dt>
+                                <dd class="mt-1 text-2xl font-semibold text-slate-950">Só depois</dd>
                             </div>
                         </dl>
                     </div>
@@ -201,28 +197,28 @@ const startUrl = () => {
                                 />
                             </span>
                             <div>
-                                <div class="text-sm font-semibold text-slate-950">Fluxo completo</div>
-                                <div class="text-sm text-slate-500">Da criação ao aceite</div>
+                                <div class="text-sm font-semibold text-slate-950">Você começa antes do cadastro</div>
+                                <div class="text-sm text-slate-500">A conta vem só depois</div>
                             </div>
                         </div>
 
                         <div class="mt-6 space-y-4">
                             <div class="rounded-md border border-slate-200 bg-white p-4">
-                                <div class="text-sm font-semibold text-slate-950">1. Proposta organizada</div>
+                                <div class="text-sm font-semibold text-slate-950">1. Preencha gratuitamente</div>
                                 <p class="mt-1 text-sm leading-6 text-slate-600">
-                                    Serviços, quantidades, valores, validade e prazo em uma estrutura clara.
+                                    Cliente, serviços, valores, validade e prazo sem login.
                                 </p>
                             </div>
                             <div class="rounded-md border border-slate-200 bg-white p-4">
-                                <div class="text-sm font-semibold text-slate-950">2. Link para o cliente</div>
+                                <div class="text-sm font-semibold text-slate-950">2. Veja a proposta pronta</div>
                                 <p class="mt-1 text-sm leading-6 text-slate-600">
-                                    Uma página pública para o cliente visualizar sem precisar de conta.
+                                    Revise o resultado antes de assumir qualquer compromisso.
                                 </p>
                             </div>
                             <div class="rounded-md border border-emerald-200 bg-emerald-50 p-4">
-                                <div class="text-sm font-semibold text-emerald-900">3. Aceite rastreável</div>
+                                <div class="text-sm font-semibold text-emerald-900">3. Salve quando estiver satisfeito</div>
                                 <p class="mt-1 text-sm leading-6 text-emerald-800">
-                                    Registro de data, responsável e status para consulta posterior.
+                                    Cadastro grátis apenas para baixar, salvar ou enviar.
                                 </p>
                             </div>
                         </div>
@@ -234,7 +230,7 @@ const startUrl = () => {
                 <div class="max-w-2xl">
                     <p class="text-sm font-semibold uppercase tracking-wide text-teal-700">Como funciona</p>
                     <h2 class="mt-3 text-3xl font-semibold text-slate-950">
-                        Do cadastro ao aceite, o fluxo fica simples.
+                        Da ideia à proposta pronta, sem barreira de cadastro.
                     </h2>
                 </div>
 
@@ -335,7 +331,7 @@ const startUrl = () => {
 
                         <Link
                             v-if="!$page.props.auth.user"
-                            :href="startUrl()"
+                            :href="route('start')"
                             class="mt-8 inline-flex w-full justify-center rounded-md bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
                         >
                             Criar conta para demonstrar interesse
@@ -384,7 +380,7 @@ const startUrl = () => {
                                 :href="startUrl()"
                                 class="rounded-md bg-white px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100"
                             >
-                                Criar minha proposta grátis
+                                Criar proposta grátis
                             </Link>
                             <Link
                                 :href="route('demo.proposal')"

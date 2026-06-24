@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminMetricsController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\DemoProposalController;
+use App\Http\Controllers\GuestProposalController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PlanController;
 use App\Http\Controllers\PremiumInterestController;
@@ -22,6 +23,12 @@ Route::get('/proposta-comercial-prestacao-de-servico', [SeoPageController::class
 Route::get('/modelo-de-orcamento-para-cliente', [SeoPageController::class, 'modeloDeOrcamentoParaCliente'])->name('seo.modelo-de-orcamento-para-cliente');
 Route::get('/proposta-comercial-freelancer', [SeoPageController::class, 'propostaComercialFreelancer'])->name('seo.proposta-comercial-freelancer');
 Route::get('/sobre', [SeoPageController::class, 'sobre'])->name('seo.sobre');
+
+Route::get('/criar-proposta', [GuestProposalController::class, 'create'])->name('guest.proposals.create');
+Route::post('/criar-proposta', [GuestProposalController::class, 'store'])->middleware('throttle:10,1')->name('guest.proposals.store');
+Route::get('/proposta-gratis/{token}', [GuestProposalController::class, 'show'])->where('token', '[A-Za-z0-9]{64}')->name('guest.proposals.show');
+Route::get('/proposta-gratis/{token}/editar', [GuestProposalController::class, 'edit'])->where('token', '[A-Za-z0-9]{64}')->name('guest.proposals.edit');
+Route::put('/proposta-gratis/{token}', [GuestProposalController::class, 'update'])->middleware('throttle:20,1')->where('token', '[A-Za-z0-9]{64}')->name('guest.proposals.update');
 
 Route::get('/p/{token}', [PublicProposalController::class, 'show'])->name('public.proposals.show');
 Route::get('/p/{token}/pdf', [PublicProposalController::class, 'downloadPdf'])->name('public.proposals.pdf');

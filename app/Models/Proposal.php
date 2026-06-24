@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
-#[Fillable(['user_id', 'client_id', 'title', 'introduction', 'valid_until', 'delivery_estimate', 'status', 'sent_at', 'sent_channel', 'accepted_at', 'accepted_by_name', 'accepted_by_email', 'accepted_by_ip', 'acceptance_notes', 'accepted_snapshot', 'accepted_snapshot_hash', 'rejected_at', 'rejected_by_name', 'rejected_by_email', 'rejected_by_ip', 'rejection_reason', 'canceled_at', 'canceled_reason', 'internal_notes', 'public_token', 'manual_discount'])]
+#[Fillable(['user_id', 'client_id', 'title', 'introduction', 'valid_until', 'delivery_estimate', 'status', 'sent_at', 'sent_channel', 'accepted_at', 'accepted_by_name', 'accepted_by_email', 'accepted_by_ip', 'acceptance_notes', 'accepted_snapshot', 'accepted_snapshot_hash', 'rejected_at', 'rejected_by_name', 'rejected_by_email', 'rejected_by_ip', 'rejection_reason', 'canceled_at', 'canceled_reason', 'internal_notes', 'public_token', 'guest_token', 'guest_client', 'guest_expires_at', 'manual_discount'])]
 class Proposal extends Model
 {
     /** @use HasFactory<ProposalFactory> */
@@ -28,6 +28,8 @@ class Proposal extends Model
             'accepted_snapshot' => 'array',
             'rejected_at' => 'datetime',
             'canceled_at' => 'datetime',
+            'guest_client' => 'array',
+            'guest_expires_at' => 'datetime',
             'manual_discount' => 'decimal:2',
         ];
     }

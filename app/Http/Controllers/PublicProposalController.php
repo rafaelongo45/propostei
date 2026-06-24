@@ -16,6 +16,7 @@ class PublicProposalController extends Controller
     public function show(string $token, UserEventService $events): Response
     {
         $proposal = Proposal::query()
+            ->whereNotNull('user_id')
             ->where('public_token', $token)
             ->with(['client', 'items', 'user'])
             ->firstOrFail();
@@ -68,6 +69,7 @@ class PublicProposalController extends Controller
     public function downloadPdf(string $token, ProposalPdfService $pdfService, UserEventService $events)
     {
         $proposal = Proposal::query()
+            ->whereNotNull('user_id')
             ->where('public_token', $token)
             ->firstOrFail();
 
@@ -95,6 +97,7 @@ class PublicProposalController extends Controller
         ]);
 
         $proposal = Proposal::query()
+            ->whereNotNull('user_id')
             ->where('public_token', $token)
             ->firstOrFail();
 
@@ -142,6 +145,7 @@ class PublicProposalController extends Controller
         ]);
 
         $proposal = Proposal::query()
+            ->whereNotNull('user_id')
             ->where('public_token', $token)
             ->firstOrFail();
 

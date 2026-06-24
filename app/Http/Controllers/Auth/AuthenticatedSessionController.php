@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\GuestProposalService;
+use App\Services\UserEventService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,11 +29,21 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request, GuestProposalService $guests, UserEventService $events): RedirectResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        if ($proposal = $guests->claimPending($request->user())) {
+            $events->track('guest_proposal_claimed', [
+                'proposal_id' => $proposal->id,
+                'auth_provider' => 'password',
+            ], $request->user());
+
+            return redirect()->route('proposals.show', $proposal)
+                ->with('success', 'Sua proposta foi salva na sua conta.');
+        }
 
         return redirect()->intended(route('dashboard', absolute: false));
     }

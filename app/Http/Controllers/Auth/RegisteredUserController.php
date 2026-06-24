@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\GuestProposalService;
 use App\Services\UserEventService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -30,7 +31,7 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request, UserEventService $events): RedirectResponse
+    public function store(Request $request, UserEventService $events, GuestProposalService $guests): RedirectResponse
     {
         $request->merge([
             'name' => $this->cleanText($request->input('name')),
@@ -53,6 +54,15 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
         $events->track('user_registered', user: $user);
+
+        if ($proposal = $guests->claimPending($user)) {
+            $events->track('guest_proposal_claimed', [
+                'proposal_id' => $proposal->id,
+            ], $user);
+
+            return redirect()->route('proposals.show', $proposal)
+                ->with('success', 'Sua proposta foi salva na sua nova conta.');
+        }
 
         return redirect(route('dashboard', absolute: false));
     }
